@@ -1,0 +1,2133 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OVR Calculator</title>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;600;700;800&display=swap');
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        min-height: 100vh;
+        padding: 24px 14px 40px;
+        font-family: 'Roboto Condensed', Arial, sans-serif;
+        color: #172b4d;
+        background:
+            radial-gradient(circle at 50% -10%, rgba(255,255,255,.95) 0 16%, transparent 42%),
+            linear-gradient(145deg, #eef5fc 0%, #dce9f7 48%, #c9dcef 100%);
+        position: relative;
+        overflow-x: hidden;
+    }
+
+    /* Nuansa stadion / halaman Top Eleven */
+    body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        opacity: .35;
+        background:
+            linear-gradient(120deg, transparent 48%, rgba(255,255,255,.45) 49%, transparent 50%) 0 0 / 90px 90px,
+            linear-gradient(60deg, transparent 48%, rgba(255,255,255,.28) 49%, transparent 50%) 0 0 / 130px 130px;
+    }
+
+    .login-wrap {
+        width: 100%;
+        max-width: 460px;
+        margin: 0 auto 16px;
+        display: flex;
+        justify-content: center;
+        position: relative;
+        z-index: 1;
+    }
+
+    .login-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        padding: 12px 26px;
+        border: none;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #ff9a2e, #ff6b00);
+        color: #fff;
+        font-family: inherit;
+        font-size: 15px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        text-decoration: none;
+        cursor: pointer;
+        box-shadow: 0 8px 18px rgba(255, 107, 0, .32);
+        transition: transform .15s ease, box-shadow .15s ease;
+    }
+
+    .login-btn:active {
+        transform: translateY(1px);
+        box-shadow: 0 4px 10px rgba(255, 107, 0, .28);
+    }
+
+    .login-btn .login-icon {
+        font-size: 17px;
+        line-height: 1;
+    }
+
+    .container {
+        width: 100%;
+        max-width: 460px;
+        margin: auto;
+        position: relative;
+        z-index: 1;
+        background: rgba(255,255,255,.93);
+        border-radius: 14px;
+        padding: 25px 20px 28px;
+        box-shadow:
+            0 14px 35px rgba(26, 64, 103, .18),
+            0 2px 7px rgba(26, 64, 103, .10);
+        border: 1px solid rgba(255,255,255,.95);
+    }
+
+    .ovr-section {
+        text-align: center;
+        margin-bottom: 26px;
+    }
+
+    .ovr-title,
+    .result-title,
+    .final-title {
+        color: #183b72;
+        text-transform: uppercase;
+        letter-spacing: .7px;
+        font-weight: 800;
+    }
+
+    .ovr-title {
+        font-size: 19px;
+        margin-bottom: 9px;
+    }
+
+    .ovr-input {
+        width: 165px;
+        height: 52px;
+        border: 2px solid #d3dfec;
+        border-radius: 9px;
+        background: #fff;
+        color: #173d76;
+        text-align: center;
+        font-family: inherit;
+        font-size: 24px;
+        font-weight: 800;
+        outline: none;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,.04);
+        transition: .2s ease;
+    }
+
+    .ovr-input:focus,
+    .attribute-input:focus {
+        border-color: #2874c6;
+        box-shadow: 0 0 0 3px rgba(40,116,198,.12);
+    }
+
+    .drill-wrap {
+        position: relative;
+        margin-bottom: 22px;
+    }
+
+    .drill-box {
+        width: 100%;
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        border: 2px solid #d3dfec;
+        border-radius: 9px;
+        background: #fff;
+        color: #173d76;
+        padding: 0 14px;
+        font-family: inherit;
+        font-size: 15px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .3px;
+        cursor: pointer;
+        user-select: none;
+        transition: .2s ease;
+    }
+
+    .drill-box span:first-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .drill-box.active,
+    .drill-box:active {
+        border-color: #2874c6;
+        box-shadow: 0 0 0 3px rgba(40,116,198,.12);
+    }
+
+    .drill-box .chevron {
+        flex-shrink: 0;
+        color: #6c88ac;
+        font-size: 12px;
+        transition: transform .2s ease;
+    }
+
+    .drill-box.active .chevron {
+        transform: rotate(180deg);
+    }
+
+    .drill-panel {
+        display: none;
+        position: absolute;
+        top: calc(100% + 7px);
+        left: 0;
+        right: 0;
+        z-index: 30;
+        max-height: 300px;
+        overflow-y: auto;
+        background: #fff;
+        border: 1px solid #d5e4f2;
+        border-radius: 10px;
+        box-shadow: 0 16px 32px rgba(26,64,103,.24);
+    }
+
+    .drill-panel.open {
+        display: block;
+    }
+
+    .drill-category {
+        position: sticky;
+        top: 0;
+        background: #173d76;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: .6px;
+        text-transform: uppercase;
+        padding: 7px 14px;
+    }
+
+    .drill-option {
+        padding: 9px 14px;
+        font-size: 14px;
+        font-weight: 700;
+        color: #274c78;
+        border-bottom: 1px solid #eef3f9;
+        cursor: pointer;
+        transition: background .15s ease;
+    }
+
+    .drill-option:last-child {
+        border-bottom: none;
+    }
+
+    .drill-option:hover,
+    .drill-option:active {
+        background: #eaf3fc;
+    }
+
+    .drill-option .drill-attrs {
+        display: block;
+        margin-top: 2px;
+        color: #7c93b6;
+        font-size: 11.5px;
+        font-weight: 500;
+        text-transform: none;
+        letter-spacing: 0;
+    }
+
+    .drill-option.reset {
+        font-style: italic;
+        color: #7c93b6;
+    }
+
+    .formula-wrap {
+        position: relative;
+        margin-bottom: 22px;
+    }
+
+    .formula-box {
+        width: 100%;
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        border: 2px solid #d3dfec;
+        border-radius: 9px;
+        background: #fff;
+        color: #173d76;
+        padding: 0 14px;
+        font-family: inherit;
+        font-size: 15px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .3px;
+        cursor: pointer;
+        user-select: none;
+        transition: .2s ease;
+    }
+
+    .formula-box.active,
+    .formula-box:active {
+        border-color: #2874c6;
+        box-shadow: 0 0 0 3px rgba(40,116,198,.12);
+    }
+
+    .formula-box .chevron {
+        flex-shrink: 0;
+        color: #6c88ac;
+        font-size: 12px;
+        transition: transform .2s ease;
+    }
+
+    .formula-box.active .chevron {
+        transform: rotate(180deg);
+    }
+
+    .formula-panel {
+        display: none;
+        position: absolute;
+        top: calc(100% + 7px);
+        left: 0;
+        right: 0;
+        z-index: 30;
+        max-height: 300px;
+        overflow-y: auto;
+        background: #fff;
+        border: 1px solid #d5e4f2;
+        border-radius: 10px;
+        box-shadow: 0 16px 32px rgba(26,64,103,.24);
+    }
+
+    .formula-panel.open {
+        display: block;
+    }
+
+    .formula-option {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 9px 14px;
+        font-size: 14px;
+        font-weight: 700;
+        color: #274c78;
+        border-bottom: 1px solid #eef3f9;
+        cursor: pointer;
+        transition: background .15s ease;
+    }
+
+    .formula-option:last-child {
+        border-bottom: none;
+    }
+
+    .formula-option:hover,
+    .formula-option:active {
+        background: #eaf3fc;
+    }
+
+    .formula-stars {
+        display: flex;
+        align-items: center;
+        line-height: 0;
+        flex-shrink: 0;
+    }
+
+    .formula-stars svg {
+        width: 15px;
+        height: 15px;
+        margin: 0 -2px;
+        overflow: visible;
+        filter: drop-shadow(0 1px 1px rgba(0,0,0,.25));
+    }
+
+    .attribute-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 11px;
+        padding: 9px 10px;
+        background: #f7fafd;
+        border: 1px solid #e0e8f1;
+        border-radius: 8px;
+    }
+
+    .attribute-title {
+        width: 108px;
+        flex-shrink: 0;
+        color: #274c78;
+        font-size: 15px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .attribute-input {
+        width: 100%;
+        height: 40px;
+        border: 2px solid #d5e0eb;
+        border-radius: 7px;
+        background: #fff;
+        color: #172f52;
+        padding: 0 11px;
+        font-family: inherit;
+        font-size: 18px;
+        font-weight: 700;
+        outline: none;
+        transition: .2s ease;
+    }
+
+    .summary {
+        display: none;
+    }
+
+    .result {
+        margin-top: 18px;
+        padding: 20px 12px 18px;
+        text-align: center;
+        border-radius: 10px;
+        background: linear-gradient(180deg, #f7fbff 0%, #eaf3fc 100%);
+        border: 1px solid #d5e4f2;
+    }
+
+    .result-title {
+        font-size: 18px;
+        margin-bottom: 7px;
+    }
+
+    .result-number {
+        display: inline-block;
+        min-width: 82px;
+        padding: 3px 12px;
+        color: #1261a8;
+        font-size: 27px;
+        font-weight: 800;
+        margin-bottom: 22px;
+    }
+
+    .rata-title {
+        color: #183b72;
+        text-transform: uppercase;
+        letter-spacing: .7px;
+        font-weight: 800;
+        font-size: 16px;
+        margin-bottom: 6px;
+    }
+
+    .rata-number {
+        display: inline-block;
+        min-width: 82px;
+        padding: 3px 12px;
+        color: #1261a8;
+        font-size: 24px;
+        font-weight: 800;
+        margin-bottom: 22px;
+    }
+
+    .final-title {
+        font-size: 19px;
+        margin-bottom: 8px;
+    }
+
+    .final-number {
+        display: inline-flex;
+        min-width: 105px;
+        min-height: 58px;
+        align-items: center;
+        justify-content: center;
+        padding: 4px 18px;
+        border-radius: 9px;
+        background: linear-gradient(135deg, #173d76, #286cb4);
+        color: #fff;
+        font-size: 31px;
+        font-weight: 800;
+        box-shadow: 0 6px 14px rgba(23,61,118,.22);
+    }
+
+    .star-row {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-top: 12px;
+        min-height: 24px;
+        line-height: 0;
+    }
+
+    .star-row svg {
+        width: 25px;
+        height: 25px;
+        margin: 0 -4px;
+        overflow: visible;
+        filter: drop-shadow(0 2px 2px rgba(0,0,0,.28));
+    }
+
+    @media (max-width: 420px) {
+        body {
+            padding: 15px 9px 30px;
+        }
+
+        .container {
+            padding: 21px 14px 24px;
+        }
+
+        .attribute-title {
+            width: 94px;
+            font-size: 14px;
+        }
+
+        .drill-box {
+            font-size: 13.5px;
+            padding: 0 11px;
+        }
+
+        .drill-option {
+            font-size: 13px;
+        }
+
+        .summary-row {
+            font-size: 15px;
+        }
+    }
+
+/* ===== TOP ELEVEN IMAGE OCR / PLAYER CARD ===== */
+.player-import {
+    margin: 0 0 22px;
+    padding: 14px;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #f7fbff 0%, #edf5fc 100%);
+    border: 1px solid #d5e4f2;
+}
+
+.import-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.import-title {
+    color: #183b72;
+    font-size: 17px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+
+.import-subtitle {
+    color: #6d84a2;
+    font-size: 11.5px;
+    line-height: 1.35;
+    margin-top: 2px;
+}
+
+.image-pick {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 88px;
+    border: 2px dashed #9ebbd8;
+    border-radius: 10px;
+    background: rgba(255,255,255,.86);
+    cursor: pointer;
+    overflow: hidden;
+    transition: .2s ease;
+}
+
+.image-pick:hover,
+.image-pick.dragover {
+    border-color: #2874c6;
+    background: #f0f7ff;
+}
+
+.image-pick input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.image-pick-content {
+    text-align: center;
+    padding: 13px 10px;
+}
+
+.image-pick-icon {
+    font-size: 26px;
+    line-height: 1;
+    margin-bottom: 5px;
+}
+
+.image-pick-text {
+    color: #274c78;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.image-pick-hint {
+    color: #8298b4;
+    font-size: 11px;
+    margin-top: 3px;
+}
+
+.player-preview {
+    display: none;
+    margin-top: 10px;
+    position: relative;
+    border-radius: 9px;
+    overflow: hidden;
+    border: 1px solid #d5e4f2;
+    background: #102f54;
+}
+
+.player-preview.show {
+    display: block;
+}
+
+.player-preview img {
+    display: block;
+    width: 100%;
+    max-height: 260px;
+    object-fit: contain;
+    background: #102f54;
+}
+
+.preview-remove {
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    width: 30px;
+    height: 30px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(20,37,58,.78);
+    color: #fff;
+    font-size: 18px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.ocr-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.ocr-btn {
+    min-height: 42px;
+    border: 0;
+    border-radius: 8px;
+    padding: 0 12px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+}
+
+.ocr-btn:active {
+    transform: translateY(1px);
+}
+
+.ocr-btn.primary {
+    color: #fff;
+    background: linear-gradient(135deg, #2874c6, #175aa3);
+    box-shadow: 0 6px 14px rgba(23,90,163,.22);
+}
+
+.ocr-btn.secondary {
+    color: #274c78;
+    background: #fff;
+    border: 1px solid #d3dfec;
+}
+
+.ocr-btn:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.ocr-status {
+    display: none;
+    margin-top: 9px;
+    padding: 8px 10px;
+    border-radius: 7px;
+    color: #365473;
+    background: #eaf3fc;
+    font-size: 11.5px;
+    line-height: 1.35;
+}
+
+.ocr-status.show {
+    display: block;
+}
+
+.ocr-status.success {
+    color: #1d6b39;
+    background: #e8f7ed;
+}
+
+.ocr-status.error {
+    color: #9c2f2f;
+    background: #fff0f0;
+}
+
+.player-result {
+    display: none;
+    margin-top: 12px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #cfddea;
+    background: #fff;
+    box-shadow: 0 5px 14px rgba(26,64,103,.08);
+}
+
+.player-result.show {
+    display: block;
+}
+
+.player-result-top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: center;
+    padding: 11px 12px;
+    background: linear-gradient(135deg, #173d76, #286cb4);
+    color: #fff;
+}
+
+.detected-name {
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.05;
+}
+
+.detected-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 6px;
+}
+
+.detected-chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 22px;
+    padding: 0 7px;
+    border-radius: 5px;
+    background: rgba(255,255,255,.14);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.detected-ovr {
+    min-width: 58px;
+    padding: 7px 8px;
+    border-radius: 8px;
+    text-align: center;
+    background: rgba(255,255,255,.13);
+}
+
+.detected-ovr small {
+    display: block;
+    font-size: 9px;
+    font-weight: 800;
+    opacity: .8;
+}
+
+.detected-ovr strong {
+    display: block;
+    font-size: 25px;
+    line-height: 1;
+}
+
+.stats-title {
+    padding: 9px 12px 6px;
+    color: #183b72;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+
+.detected-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: 5px;
+    padding: 0 8px 9px;
+}
+
+.detected-stat {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    min-width: 0;
+    padding: 6px 7px;
+    border-radius: 6px;
+    background: #f3f7fb;
+    border: 1px solid #e1e9f1;
+}
+
+.detected-stat span:first-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #49637f;
+    font-size: 10.5px;
+    font-weight: 700;
+}
+
+.detected-stat strong {
+    flex-shrink: 0;
+    color: #173d76;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.save-drill-btn {
+    width: 100%;
+    min-height: 45px;
+    margin-top: 10px;
+    border: 0;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #4dca45, #2ea83a);
+    color: #fff;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .35px;
+    cursor: pointer;
+    box-shadow: 0 7px 14px rgba(46,168,58,.2);
+}
+
+.save-drill-btn:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.save-note {
+    margin-top: 6px;
+    color: #7890ad;
+    font-size: 10.5px;
+    line-height: 1.35;
+    text-align: center;
+}
+
+.ocr-progress {
+    display: none;
+    height: 5px;
+    margin-top: 9px;
+    overflow: hidden;
+    border-radius: 99px;
+    background: #dbe7f2;
+}
+
+.ocr-progress.show {
+    display: block;
+}
+
+.ocr-progress-bar {
+    width: 0%;
+    height: 100%;
+    border-radius: inherit;
+    background: #2874c6;
+    transition: width .2s ease;
+}
+
+@media (max-width: 420px) {
+    .player-result-top {
+        grid-template-columns: minmax(0, 1fr) 58px;
+    }
+
+    .detected-name {
+        font-size: 18px;
+    }
+
+    .ocr-actions {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* ===== OCR RESULT: ONLY OVR / POSITION / PLAYER STATS ===== */
+.player-result-top{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:10px;
+    align-items:center;
+    padding:11px 12px;
+    background:linear-gradient(135deg,#173d76,#286cb4);
+    color:#fff;
+}
+.detected-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:0}
+.detected-chip{
+    display:inline-flex;
+    align-items:center;
+    min-height:24px;
+    padding:0 9px;
+    border-radius:5px;
+    background:rgba(255,255,255,.14);
+    color:#fff;
+    font-size:12px;
+    font-weight:800;
+}
+.detected-position-value{
+    font-size:17px;
+    font-weight:900;
+    letter-spacing:.3px;
+}
+.detected-ovr{
+    min-width:68px;
+    padding:7px 8px;
+    border-radius:8px;
+    text-align:center;
+    background:rgba(255,255,255,.13);
+}
+.detected-ovr small{
+    display:block;
+    font-size:9px;
+    font-weight:800;
+    opacity:.8;
+}
+.detected-ovr strong{
+    display:block;
+    font-size:25px;
+    line-height:1;
+}
+.detected-stat{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:6px;
+    min-width:0;
+    padding:6px 7px;
+    border-radius:6px;
+    background:#f3f7fb;
+    border:1px solid #e1e9f1;
+    border-left:4px solid #d8e0e8;
+}
+.detected-stat span:first-child{
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    color:#49637f;
+    font-size:10.5px;
+    font-weight:700;
+}
+.detected-stat strong{
+    flex-shrink:0;
+    color:#173d76;
+    font-size:13px;
+    font-weight:800;
+}
+.detected-stat.tone-bright{
+    border-left-color:#36b94a;
+    background:#edf9ef;
+}
+.detected-stat.tone-bright strong{color:#168b2d}
+.detected-stat.tone-dark{
+    border-left-color:#e03c3c;
+    background:#fff0f0;
+}
+.detected-stat.tone-dark strong{color:#c72e2e}
+
+.attribute-row.tone-bright{
+    border-color:#a9ddb1;
+    background:#f0fbf2;
+}
+.attribute-row.tone-bright .attribute-title{color:#168b2d}
+.attribute-row.tone-bright .attribute-input{
+    border-color:#5fc56d;
+    background:#f7fff8;
+}
+.attribute-row.tone-dark{
+    border-color:#efb0b0;
+    background:#fff3f3;
+}
+.attribute-row.tone-dark .attribute-title{color:#c72e2e}
+.attribute-row.tone-dark .attribute-input{
+    border-color:#e66a6a;
+    background:#fffafa;
+}
+.ocr-scope-note{
+    margin-top:7px;
+    color:#7890ad;
+    font-size:10.5px;
+    line-height:1.35;
+}
+@media (max-width:420px){
+    .player-result-top{grid-template-columns:minmax(0,1fr) 62px}
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="login-wrap">
+    <a class="login-btn" href="https://manager.topeleven.com/id/top-eleven-daily-streak" target="_blank" rel="noopener noreferrer">
+        <span class="login-icon">&#9917;</span>
+        <span>Login Daily Streak Top Eleven</span>
+    </a>
+</div>
+
+<div class="container">
+
+    <!-- IMPORT GAMBAR PEMAIN TOP ELEVEN -->
+    <section class="player-import" id="playerImport">
+        <div class="import-head">
+            <div>
+                <div class="import-title">Scan Pemain Top Eleven</div>
+                <div class="import-subtitle">Scan hanya OVR, posisi, dan statistik pemain. Nama dan rekomendasi drill tidak diproses OCR.</div>
+            </div>
+        </div>
+
+        <label class="image-pick" id="imagePick" for="playerImageInput">
+            <input id="playerImageInput" type="file" accept="image/*">
+            <div class="image-pick-content">
+                <div class="image-pick-icon">📷</div>
+                <div class="image-pick-text">Pilih gambar pemain</div>
+                <div class="image-pick-hint">JPG / PNG • bisa drag & drop</div>
+            </div>
+        </label>
+
+        <div class="player-preview" id="playerPreview">
+            <img id="playerPreviewImg" alt="Preview pemain Top Eleven">
+            <button type="button" class="preview-remove" id="removeImageBtn" title="Hapus gambar">×</button>
+        </div>
+
+        <div class="ocr-actions">
+            <button type="button" class="ocr-btn primary" id="scanBtn" disabled>🔎 Deteksi Statistik</button>
+            <button type="button" class="ocr-btn secondary" id="replaceBtn">🖼️ Ganti Gambar</button>
+        </div>
+
+        <div class="ocr-progress" id="ocrProgress">
+            <div class="ocr-progress-bar" id="ocrProgressBar"></div>
+        </div>
+        <div class="ocr-status" id="ocrStatus"></div>
+
+        <div class="player-result" id="playerResult">
+            <div class="player-result-top">
+                <div class="detected-meta">
+                    <span class="detected-chip">POSISI <b id="detectedPosition" class="detected-position-value" style="margin-left:5px;">-</b></span>
+                    <span class="detected-chip">OCR TERARAH</span>
+                </div>
+                <div class="detected-ovr">
+                    <small>OVR</small>
+                    <strong id="detectedOVR">-</strong>
+                </div>
+            </div>
+
+            <div class="stats-title">Statistik Terdeteksi</div>
+            <div class="detected-stats" id="detectedStats"></div>
+
+            <button type="button" class="save-drill-btn" id="saveDrillBtn" disabled>
+                💾 Isi Statistik ke Kalkulator
+            </button>
+            <div class="save-note">
+                Pilih <b>Pilih Drill</b> terlebih dahulu. Hanya statistik yang diperlukan drill tersebut yang akan dimasukkan ke kalkulator.
+            </div>
+            <div class="ocr-scope-note">Hijau = atribut terang • Merah = atribut gelap • Abu/biru = atribut normal/tidak disorot.</div>
+        </div>
+    </section>
+
+
+    <div class="ovr-section">
+        <div class="ovr-title">OVR PEMAIN</div>
+        <input id="ovrInput" class="ovr-input" type="number" inputmode="numeric">
+    </div>
+
+    <div class="drill-wrap">
+        <div class="ovr-title" style="text-align:left; margin-bottom:9px;">Pilih Drill</div>
+        <div id="drillBox" class="drill-box">
+            <span id="drillBoxLabel">-- Pilih Drill --</span>
+            <span class="chevron">&#9662;</span>
+        </div>
+        <div id="drillPanel" class="drill-panel"></div>
+    </div>
+
+    <div class="formula-wrap">
+        <div class="ovr-title" style="text-align:left; margin-bottom:9px;">Pilih Rumus Perkalian</div>
+        <div id="formulaBox" class="formula-box">
+            <span id="formulaBoxLabel">OVR 180</span>
+            <span class="chevron">&#9662;</span>
+        </div>
+        <div id="formulaPanel" class="formula-panel"></div>
+    </div>
+
+    <div class="attribute-row">
+        <div class="attribute-title">Atribut 1</div>
+        <input class="attribute-input attribute" type="number" inputmode="numeric">
+    </div>
+
+    <div class="attribute-row">
+        <div class="attribute-title">Atribut 2</div>
+        <input class="attribute-input attribute" type="number" inputmode="numeric">
+    </div>
+
+    <div class="attribute-row">
+        <div class="attribute-title">Atribut 3</div>
+        <input class="attribute-input attribute" type="number" inputmode="numeric">
+    </div>
+
+    <div class="attribute-row">
+        <div class="attribute-title">Atribut 4</div>
+        <input class="attribute-input attribute" type="number" inputmode="numeric">
+    </div>
+
+    <div class="attribute-row">
+        <div class="attribute-title">Atribut 5</div>
+        <input class="attribute-input attribute" type="number" inputmode="numeric">
+    </div>
+
+    <div class="attribute-row">
+        <div class="attribute-title">Atribut 6</div>
+        <input class="attribute-input attribute" type="number" inputmode="numeric">
+    </div>
+
+    <div class="attribute-row">
+        <div class="attribute-title">Atribut 7</div>
+        <input class="attribute-input attribute" type="number" inputmode="numeric">
+    </div>
+
+    <div class="summary">
+        <div class="summary-row">
+            <span>Jumlah Atribut</span>
+            <span id="jumlahAtribut" class="number">0</span>
+        </div>
+
+        <div class="summary-row">
+            <span>Jumlah Maksimal Atribut</span>
+            <span id="jumlahMaksimal" class="number">0</span>
+        </div>
+    </div>
+
+    <div class="result">
+        <div class="result-title">Peningkatan OVR</div>
+        <div id="peningkatanOVR" class="result-number">0</div>
+
+        <div class="rata-title">Rata Rata Pendapatan Attribute</div>
+        <div id="rataRataAttribute" class="rata-number">0</div>
+
+        <div class="final-title">OVR Final</div>
+        <div id="ovrFinal" class="final-number">0</div>
+        <div id="starRow" class="star-row"></div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script>
+    const ovrInput = document.getElementById("ovrInput");
+    const attributes = document.querySelectorAll(".attribute");
+    const attributeTitles = document.querySelectorAll(".attribute-title");
+    const defaultTitles = Array.from(attributeTitles).map(el => el.textContent);
+
+    const jumlahAtribut = document.getElementById("jumlahAtribut");
+    const jumlahMaksimal = document.getElementById("jumlahMaksimal");
+    const peningkatanOVR = document.getElementById("peningkatanOVR");
+    const rataRataAttribute = document.getElementById("rataRataAttribute");
+    const ovrFinal = document.getElementById("ovrFinal");
+
+    const starRow = document.getElementById("starRow");
+
+    const formulaBox = document.getElementById("formulaBox");
+    const formulaBoxLabel = document.getElementById("formulaBoxLabel");
+    const formulaPanel = document.getElementById("formulaPanel");
+    let formulaValue = 180;
+
+    const drillBox = document.getElementById("drillBox");
+    const drillBoxLabel = document.getElementById("drillBoxLabel");
+    const drillPanel = document.getElementById("drillPanel");
+
+    // Tier warna bintang berdasarkan posisi bintang (0-index) dalam total 10 bintang.
+    // Bintang ke 1-5 = Kuning, ke 6-7 = Oranye, ke 8-9 = Merah, ke 10 = Pink.
+    function starTierColor(index) {
+        if (index < 5) return { top: "#fff6c2", mid: "#ffd23c", bottom: "#ff9f00", stroke: "#a5680a" };
+        if (index < 7) return { top: "#ffdcae", mid: "#ff9d3d", bottom: "#ff6a00", stroke: "#a34700" };
+        if (index < 9) return { top: "#ffb8b0", mid: "#ff5347", bottom: "#e01f16", stroke: "#8c0d06" };
+        return { top: "#ffd3ee", mid: "#ff6ec0", bottom: "#e6198f", stroke: "#900a5c" };
+    }
+
+    // Jumlah bintang berdasarkan rentang OVR Final.
+    function getStarCount(ovr) {
+        if (ovr < 16) return 0;
+        if (ovr < 32) return 1;
+        if (ovr < 48) return 2;
+        if (ovr < 64) return 3;
+        if (ovr < 80) return 4;
+        if (ovr < 100) return 5;
+        if (ovr < 120) return 6;
+        if (ovr < 140) return 7;
+        if (ovr < 160) return 8;
+        if (ovr < 180) return 9;
+        return 10;
+    }
+
+    function buildStarSVG(colors, uid) {
+        return '<svg viewBox="0 0 51 48" xmlns="http://www.w3.org/2000/svg">' +
+            '<defs>' +
+                '<linearGradient id="starGrad' + uid + '" x1="0" y1="0" x2="0" y2="1">' +
+                    '<stop offset="0%" stop-color="' + colors.top + '"/>' +
+                    '<stop offset="55%" stop-color="' + colors.mid + '"/>' +
+                    '<stop offset="100%" stop-color="' + colors.bottom + '"/>' +
+                '</linearGradient>' +
+            '</defs>' +
+            '<path d="M25.5 1 L31.9 18.5 L50.5 19.4 L35.8 31.2 L40.9 49 L25.5 38.5 L10.1 49 L15.2 31.2 L0.5 19.4 L19.1 18.5 Z" ' +
+                'fill="url(#starGrad' + uid + ')" stroke="' + colors.stroke + '" stroke-width="1.8" stroke-linejoin="round"/>' +
+            '<path d="M24 6 L19.5 17.5 L8.5 18.3" fill="none" stroke="rgba(255,255,255,.65)" stroke-width="2.2" stroke-linecap="round"/>' +
+        '</svg>';
+    }
+
+    function renderStars(finalOVRValue) {
+        const count = getStarCount(finalOVRValue);
+        let html = "";
+        for (let i = 0; i < count; i++) {
+            html += buildStarSVG(starTierColor(i), i);
+        }
+        starRow.innerHTML = html;
+    }
+
+    function buildMiniStars(ovrValue, uidPrefix) {
+        const count = getStarCount(ovrValue);
+        let html = "";
+        for (let i = 0; i < count; i++) {
+            html += buildStarSVG(starTierColor(i), uidPrefix + "-" + i);
+        }
+        return html;
+    }
+
+    const formulaValues = [80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180];
+
+    function openFormulaPanel() {
+        formulaPanel.classList.add("open");
+        formulaBox.classList.add("active");
+    }
+
+    function closeFormulaPanel() {
+        formulaPanel.classList.remove("open");
+        formulaBox.classList.remove("active");
+    }
+
+    formulaValues.forEach(val => {
+        const optEl = document.createElement("div");
+        optEl.className = "formula-option";
+        optEl.innerHTML = '<span>OVR ' + val + '</span>' +
+            '<span class="formula-stars">' + buildMiniStars(val, "formula" + val) + '</span>';
+        optEl.addEventListener("click", () => {
+            formulaValue = val;
+            formulaBoxLabel.textContent = "OVR " + val;
+            closeFormulaPanel();
+            calculate();
+        });
+        formulaPanel.appendChild(optEl);
+    });
+
+    formulaBox.addEventListener("click", (e) => {
+        e.stopPropagation();
+        formulaPanel.classList.contains("open") ? closeFormulaPanel() : openFormulaPanel();
+    });
+
+    document.addEventListener("click", (e) => {
+        if (!formulaPanel.contains(e.target) && !formulaBox.contains(e.target)) {
+            closeFormulaPanel();
+        }
+    });
+
+    const drillData = [
+        { category: "Menyerang", drills: [
+            { name: "Oper, Lari, Tembak!", attrs: ["Umpan", "Tembakan", "Antisipasi", "Kecepatan"] },
+            { name: "Umpan Bola Mati", attrs: ["Penjagaan", "Sundulan", "Umpan Silang", "Keluar Sarang", "Tembakan"] },
+            { name: "Teknik Menembak", attrs: ["Kelincahan", "Penyelesaian", "Kekuatan", "Refleks", "Tembakan"] },
+            { name: "Giring Bola Zig-Zag", attrs: ["Umpan", "Giringan", "Kebugaran", "Kecepatan"] },
+            { name: "Permainan Sayap", attrs: ["Penyelesaian", "Tinjuan", "Sundulan", "Umpan Silang", "Tembakan"] },
+            { name: "Serangan Balik Cepat", attrs: ["Kreativitas", "Umpan", "Penyelesaian", "Umpan Silang", "Komunikasi"] },
+            { name: "Pencipta Peluang", attrs: ["Tembakan", "Penyelesaian", "Umpan", "Kekuatan"] },
+            { name: "Kelas Master Menyerang", attrs: ["Umpan", "Giringan", "Umpan Silang", "Tembakan", "Penyelesaian"] },
+            { name: "Penyelesaian 1-on-1", attrs: ["Giringan", "Antisipasi", "Penyelesaian", "Keluar Sarang", "Tekel"] }
+        ]},
+        { category: "Bertahan", drills: [
+            { name: "Analisis Video", attrs: ["Penempatan Posisi", "Kreativitas", "Komunikasi", "Keberanian"] },
+            { name: "Gunakan Kepalamu", attrs: ["Umpan", "Penempatan Posisi", "Kreativitas", "Sundulan"] },
+            { name: "Hentikan Penyerang", attrs: ["Keberanian", "Giringan", "Penjagaan", "Tekel", "Kekuatan"] },
+            { name: "Latihan Pressing", attrs: ["Keberanian", "Penjagaan", "Tekel", "Penempatan Posisi", "Agresivitas"] },
+            { name: "Blokir Tangguh", attrs: ["Tekel", "Keberanian", "Penempatan Posisi", "Agresivitas"] },
+            { name: "Kelas Master Bertahan", attrs: ["Tekel", "Penjagaan", "Penempatan Posisi", "Sundulan", "Keberanian"] },
+            { name: "Pertahanan Segaris", attrs: ["Penjagaan", "Penempatan Posisi", "Komunikasi", "Konsentrasi"] },
+            { name: "Antisipasi Bola Atas", attrs: ["Keberanian", "Penjagaan", "Jangkauan Udara", "Sundulan", "Umpan Silang"] },
+            { name: "Latihan Kiper", attrs: ["Lemparan", "Kelincahan", "Jangkauan Udara", "Sepakan", "Refleks"] }
+        ]},
+        { category: "Penguasaan", drills: [
+            { name: "Kontrol Bola", attrs: ["Konsentrasi", "Giringan", "Kreativitas", "Sundulan"] },
+            { name: "Kucing-Kucingan", attrs: ["Kebugaran", "Umpan", "Tekel", "Penempatan Posisi", "Agresivitas"] },
+            { name: "Beralih Sisi Cepat", attrs: ["Kecepatan", "Umpan Silang", "Komunikasi", "Kreativitas", "Umpan", "Penempatan Posisi"] },
+            { name: "Permainan Kontak", attrs: ["Keberanian", "Giringan", "Penjagaan", "Kekuatan", "Agresivitas"] },
+            { name: "Kelas Master Gelandang", attrs: ["Umpan", "Giringan", "Penempatan Posisi"] },
+            { name: "Kekuatan Ramalan", attrs: ["Tembakan", "Giringan", "Umpan", "Kreativitas"] },
+            { name: "Drill Sentuhan Pertama", attrs: ["Umpan", "Giringan", "Lemparan", "Kebugaran"] },
+            { name: "Bertahan Di Jalur", attrs: ["Penempatan Posisi", "Kebugaran", "Jangkauan Udara", "Kecepatan"] },
+            { name: "Umpan Sebelum Tembakan", attrs: ["Kreativitas", "Umpan", "Penyelesaian", "Antisipasi", "Penempatan Posisi"] }
+        ]},
+        { category: "Fisik & Mental", drills: [
+            { name: "Pemanasan", attrs: ["Refleks", "Kebugaran", "Agresivitas", "Sundulan"] },
+            { name: "Peregangan", attrs: ["Kelincahan", "Kekuatan", "Kebugaran", "Kecepatan"] },
+            { name: "Lari Jauh", attrs: ["Konsentrasi", "Kebugaran", "Kecepatan"] },
+            { name: "Lari Bolak-Balik", attrs: ["Kecepatan", "Kelincahan", "Kekuatan", "Keberanian"] },
+            { name: "Sprint", attrs: ["Keluar Sarang", "Giringan", "Kebugaran", "Kecepatan"] },
+            { name: "Stamina Absolut", attrs: ["Kebugaran", "Kekuatan", "Keberanian", "Penempatan Posisi"] },
+            { name: "Kelas Master Fisik", attrs: ["Kebugaran", "Kekuatan", "Agresivitas", "Kecepatan", "Kreativitas"] },
+            { name: "Carioca Bertangga", attrs: ["Kelincahan", "Konsentrasi", "Agresivitas", "Kecepatan"] },
+            { name: "Lari Halang Rintang", attrs: ["Kecepatan", "Sepakan", "Agresivitas", "Keberanian"] },
+            { name: "Kebugaran", attrs: ["Kekuatan", "Kebugaran", "Lemparan", "Sepakan"] }
+        ]}
+    ];
+
+    const attributeRows = document.querySelectorAll(".attribute-row");
+
+    function applyDrillAttrs(attrs) {
+        attributeTitles.forEach((el, i) => {
+            if (attrs[i]) {
+                el.textContent = attrs[i];
+                attributeRows[i].style.display = "";
+            } else {
+                el.textContent = "";
+                attributes[i].value = "";
+                attributeRows[i].style.display = "none";
+            }
+            setAttributeTone(i, "neutral");
+        });
+        calculate();
+    }
+
+    function resetDrillAttrs() {
+        attributeTitles.forEach((el, i) => {
+            el.textContent = defaultTitles[i];
+            attributes[i].value = "";
+            attributeRows[i].style.display = "none";
+            setAttributeTone(i, "neutral");
+        });
+        calculate();
+    }
+
+    function openDrillPanel() {
+        drillPanel.classList.add("open");
+        drillBox.classList.add("active");
+    }
+
+    function closeDrillPanel() {
+        drillPanel.classList.remove("open");
+        drillBox.classList.remove("active");
+    }
+
+    const resetOption = document.createElement("div");
+    resetOption.className = "drill-option reset";
+    resetOption.textContent = "-- Reset Ke Default --";
+    resetOption.addEventListener("click", () => {
+        resetDrillAttrs();
+        drillBoxLabel.textContent = "-- Pilih Drill --";
+        closeDrillPanel();
+    });
+    drillPanel.appendChild(resetOption);
+
+    drillData.forEach(cat => {
+        const catEl = document.createElement("div");
+        catEl.className = "drill-category";
+        catEl.textContent = cat.category;
+        drillPanel.appendChild(catEl);
+
+        cat.drills.forEach(drill => {
+            const optEl = document.createElement("div");
+            optEl.className = "drill-option";
+            optEl.innerHTML = drill.name + '<span class="drill-attrs">' + drill.attrs.join(", ") + "</span>";
+            optEl.addEventListener("click", () => {
+                applyDrillAttrs(drill.attrs);
+                drillBoxLabel.textContent = drill.name;
+                closeDrillPanel();
+            });
+            drillPanel.appendChild(optEl);
+        });
+    });
+
+    drillBox.addEventListener("click", (e) => {
+        e.stopPropagation();
+        drillPanel.classList.contains("open") ? closeDrillPanel() : openDrillPanel();
+    });
+
+    document.addEventListener("click", (e) => {
+        if (!drillPanel.contains(e.target) && !drillBox.contains(e.target)) {
+            closeDrillPanel();
+        }
+    });
+
+    function getNumber(input) {
+        const value = parseFloat(input.value);
+        return Number.isFinite(value) ? value : 0;
+    }
+
+    function setAttributeTone(index, tone = "neutral") {
+        const row = attributeRows[index];
+        if (!row) return;
+        row.classList.remove("tone-bright", "tone-dark");
+        if (tone === "bright") row.classList.add("tone-bright");
+        if (tone === "dark") row.classList.add("tone-dark");
+    }
+
+    function calculate() {
+        let totalAtribut = 0;
+        let jumlahAttributeTerisi = 0;
+
+        attributes.forEach(input => {
+            if (input.value.trim() !== "" && Number.isFinite(parseFloat(input.value))) {
+                totalAtribut += getNumber(input);
+                jumlahAttributeTerisi++;
+            }
+        });
+
+        // Setiap atribut yang terisi memberikan nilai sesuai rumus yang dipilih (default 180).
+        const pengali = formulaValue;
+        const maksimal = jumlahAttributeTerisi * pengali;
+
+        // Selisih maksimal atribut dengan jumlah atribut.
+        const selisih = maksimal - totalAtribut;
+
+        // Dibagi 15, kemudian dibulatkan ke bilangan terdekat.
+        const peningkatan = selisih / 15;
+
+        // Rata Rata Pendapatan Attribute = selisih dibagi jumlah atribut yang diisi.
+        const rataRata = jumlahAttributeTerisi > 0 ? selisih / jumlahAttributeTerisi : 0;
+
+        // OVR Final = angka dasar OVR + peningkatan OVR.
+        const ovrDasar = getNumber(ovrInput);
+        const finalOVR = ovrDasar + Math.round(peningkatan);
+
+        function formatDecimal(num) {
+            return Number.isInteger(num) ? String(num) : num.toFixed(5).replace(/0+$/, "").replace(/\.$/, "");
+        }
+
+        jumlahAtribut.textContent = totalAtribut;
+        jumlahMaksimal.textContent = maksimal;
+        peningkatanOVR.textContent = formatDecimal(peningkatan);
+        rataRataAttribute.textContent = formatDecimal(rataRata);
+        ovrFinal.textContent = finalOVR;
+        renderStars(finalOVR);
+    }
+
+    ovrInput.addEventListener("input", calculate);
+
+    attributes.forEach(input => {
+        input.addEventListener("input", calculate);
+    });
+
+    // UI only: sembunyikan semua box/frame atribut sebelum drill dipilih.
+    attributeRows.forEach(row => {
+        row.style.display = "none";
+    });
+
+    calculate();
+
+    /* ============================================================
+       TOP ELEVEN PLAYER IMAGE OCR — MODE RINGAN / TERARAH
+       Hanya 3 target OCR:
+       1) OVR pada area "OVR: angka"
+       2) Posisi pada badge setelah "Posisi:"
+       3) Statistik pada panel statistik pemain
+       Nama pemain dan rekomendasi drill TIDAK diproses OCR.
+       ============================================================ */
+    (() => {
+        const imageInput = document.getElementById("playerImageInput");
+        const imagePick = document.getElementById("imagePick");
+        const preview = document.getElementById("playerPreview");
+        const previewImg = document.getElementById("playerPreviewImg");
+        const removeImageBtn = document.getElementById("removeImageBtn");
+        const replaceBtn = document.getElementById("replaceBtn");
+        const scanBtn = document.getElementById("scanBtn");
+        const saveDrillBtn = document.getElementById("saveDrillBtn");
+        const playerResult = document.getElementById("playerResult");
+        const detectedPosition = document.getElementById("detectedPosition");
+        const detectedOVR = document.getElementById("detectedOVR");
+        const detectedStats = document.getElementById("detectedStats");
+        const ocrStatus = document.getElementById("ocrStatus");
+        const ocrProgress = document.getElementById("ocrProgress");
+        const ocrProgressBar = document.getElementById("ocrProgressBar");
+
+        let selectedFile = null;
+        let selectedImageURL = "";
+        let detectedPlayer = null;
+
+        const POSITIONS = ["GK","DC","DL","DR","DMC","MC","ML","MR","AMC","AML","AMR","ST"];
+
+        /*
+         * Top Eleven dapat memakai label "Dribel" pada layar, sementara
+         * kalkulator lama memakai "Giringan". Keduanya diarahkan ke
+         * canonical yang sama agar hasil OCR tetap masuk ke drill.
+         */
+        const statAliases = {
+            "refleks": "Refleks",
+            "kelincahan": "Kelincahan",
+            "antisipasi": "Antisipasi",
+            "keluar sarang": "Keluar Sarang",
+            "komunikasi": "Komunikasi",
+            "lemparan": "Lemparan",
+            "sepakan": "Sepakan",
+            "tinjuan": "Tinjuan",
+            "jangkauan udara": "Jangkauan Udara",
+            "konsentrasi": "Konsentrasi",
+            "kebugaran": "Kebugaran",
+            "kekuatan": "Kekuatan",
+            "agresivitas": "Agresivitas",
+            "kecepatan": "Kecepatan",
+            "kreativitas": "Kreativitas",
+            "umpan silang": "Umpan Silang",
+            "umpansilang": "Umpan Silang",
+            "umpan": "Umpan",
+            "tembakan": "Tembakan",
+            "penjagaan": "Penjagaan",
+            "sundulan": "Sundulan",
+            "giringan": "Giringan",
+            "dribel": "Giringan",
+            "penyelesaian": "Penyelesaian",
+            "penempatan posisi": "Penempatan Posisi",
+            "penempatan": "Penempatan Posisi",
+            "keberanian": "Keberanian",
+            "tekel": "Tekel"
+        };
+
+        const aliasList = Object.keys(statAliases)
+            .sort((a,b) => b.length - a.length);
+
+        const normalize = value => String(value || "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .replace(/[|]/g, "l")
+            .replace(/[^a-z0-9\s]/g, " ")
+            .replace(/\s+/g, " ")
+            .trim();
+
+        function setStatus(message, type = "") {
+            ocrStatus.textContent = message;
+            ocrStatus.className = "ocr-status show" + (type ? " " + type : "");
+        }
+
+        function clearStatus() {
+            ocrStatus.textContent = "";
+            ocrStatus.className = "ocr-status";
+        }
+
+        function clamp(v, min, max) {
+            return Math.max(min, Math.min(max, v));
+        }
+
+        function loadImage(file) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                const url = URL.createObjectURL(file);
+                img.onload = () => {
+                    URL.revokeObjectURL(url);
+                    resolve(img);
+                };
+                img.onerror = err => {
+                    URL.revokeObjectURL(url);
+                    reject(err);
+                };
+                img.src = url;
+            });
+        }
+
+        /*
+         * Crop relatif terhadap screenshot.
+         * Layout screenshot Top Eleven pada referensi:
+         * OVR berada di bawah nama dan di atas Umur.
+         * Badge posisi berada di baris "Posisi:".
+         * Panel statistik berada di bawah informasi pemain.
+         */
+        function cropRelative(img, rx1, ry1, rx2, ry2, scale = 3) {
+            const sx = Math.round(img.width * rx1);
+            const sy = Math.round(img.height * ry1);
+            const sw = Math.max(1, Math.round(img.width * (rx2 - rx1)));
+            const sh = Math.max(1, Math.round(img.height * (ry2 - ry1)));
+
+            const canvas = document.createElement("canvas");
+            canvas.width = sw * scale;
+            canvas.height = sh * scale;
+
+            const ctx = canvas.getContext("2d", { willReadFrequently: true });
+            ctx.imageSmoothingEnabled = true;
+            ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+            return { canvas, sourceX: sx, sourceY: sy, sourceW: sw, sourceH: sh };
+        }
+
+        function prepareGray(canvas, contrast = 1.25) {
+            const ctx = canvas.getContext("2d", { willReadFrequently: true });
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            for (let i = 0; i < data.length; i += 4) {
+                const gray = (data[i] * 0.299) + (data[i + 1] * 0.587) + (data[i + 2] * 0.114);
+                const v = clamp(((gray - 128) * contrast) + 128, 0, 255);
+                data[i] = v;
+                data[i + 1] = v;
+                data[i + 2] = v;
+            }
+            ctx.putImageData(imageData, 0, 0);
+            return canvas;
+        }
+
+        function thresholdCanvas(canvas, threshold = 120) {
+            const ctx = canvas.getContext("2d", { willReadFrequently: true });
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            for (let i = 0; i < data.length; i += 4) {
+                const gray = (data[i] * 0.299) + (data[i + 1] * 0.587) + (data[i + 2] * 0.114);
+                const v = gray < threshold ? 0 : 255;
+                data[i] = v;
+                data[i + 1] = v;
+                data[i + 2] = v;
+            }
+            ctx.putImageData(imageData, 0, 0);
+            return canvas;
+        }
+
+        function extractFirstNumber(text) {
+            const m = String(text || "").match(/\b([0-9]{1,3})\b/);
+            if (!m) return null;
+            const n = Number(m[1]);
+            return n >= 1 && n <= 250 ? n : null;
+        }
+
+        function parsePositionText(text) {
+            let raw = normalize(text).replace(/\s/g, "").toUpperCase();
+
+            // Koreksi kecil yang umum terjadi pada badge dua/ tiga huruf.
+            const corrections = {
+                "5T": "ST",
+                "S7": "ST",
+                "G K": "GK",
+                "AMR": "AMR",
+                "AML": "AML",
+                "AMC": "AMC",
+                "DMC": "DMC"
+            };
+
+            raw = corrections[raw] || raw;
+
+            const exact = POSITIONS.find(p => raw.includes(p));
+            if (exact) return exact;
+
+            // Fuzzy hanya untuk satu kesalahan karakter agar tidak salah posisi.
+            let best = "";
+            let bestDistance = 99;
+
+            for (const pos of POSITIONS) {
+                if (Math.abs(pos.length - raw.length) > 1) continue;
+                let d = 0;
+                const len = Math.max(pos.length, raw.length);
+                for (let i = 0; i < len; i++) {
+                    if (pos[i] !== raw[i]) d++;
+                }
+                if (d < bestDistance) {
+                    bestDistance = d;
+                    best = pos;
+                }
+            }
+
+            return bestDistance <= 1 ? best : "";
+        }
+
+        function escapeRegExp(text) {
+            return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        }
+
+        function aliasPattern(alias) {
+            return alias
+                .split(" ")
+                .map(escapeRegExp)
+                .join("\\s*");
+        }
+
+        function findStatInLine(line) {
+            const normalizedLine = normalize(line);
+            const found = [];
+
+            for (const alias of aliasList) {
+                const pattern = aliasPattern(alias);
+                const re = new RegExp("(^|\\s)" + pattern + "(?![a-z])\\s*[:\\-]?\\s*(\\d{1,3})(?!\\d)", "i");
+                const match = normalizedLine.match(re);
+
+                if (match) {
+                    const value = Number(match[2]);
+                    if (value >= 0 && value <= 250) {
+                        found.push({
+                            alias,
+                            canonical: statAliases[alias],
+                            value
+                        });
+                    }
+                }
+            }
+
+            return found;
+        }
+
+        function parseStats(text) {
+            const lines = String(text || "")
+                .replace(/\r/g, "\n")
+                .split("\n")
+                .map(line => line.trim())
+                .filter(Boolean);
+
+            const stats = {};
+            const detectedOrder = [];
+
+            for (const line of lines) {
+                const matches = findStatInLine(line);
+                for (const item of matches) {
+                    if (stats[item.canonical] === undefined) {
+                        stats[item.canonical] = item.value;
+                        detectedOrder.push({
+                            name: item.canonical,
+                            alias: item.alias
+                        });
+                    }
+                }
+            }
+
+            /*
+             * Fallback kedua: OCR kadang memisahkan label dan angka.
+             * Hanya mencari angka pertama setelah label pada baris yang sama,
+             * bukan melakukan OCR tambahan.
+             */
+            for (const line of lines) {
+                const normalizedLine = normalize(line);
+                for (const alias of aliasList) {
+                    const canonical = statAliases[alias];
+                    if (stats[canonical] !== undefined) continue;
+
+                    const labelRe = new RegExp("(^|\\s)" + aliasPattern(alias) + "(?![a-z])", "i");
+                    const labelMatch = normalizedLine.match(labelRe);
+                    if (!labelMatch) continue;
+
+                    const after = normalizedLine.slice(labelMatch.index + labelMatch[0].length);
+                    const num = after.match(/\b(\d{1,3})\b/);
+                    if (!num) continue;
+
+                    const value = Number(num[1]);
+                    if (value >= 0 && value <= 250) {
+                        stats[canonical] = value;
+                        detectedOrder.push({ name: canonical, alias });
+                    }
+                }
+            }
+
+            return { stats, detectedOrder };
+        }
+
+        function classifyPixel(r, g, b) {
+            if (g > r + 24 && g > b + 12) return "bright";
+            if (r > g + 24 && r > b + 20) return "dark";
+            return "neutral";
+        }
+
+        function buildToneGrid(img) {
+            /*
+             * Sampel warna dari garis kecil di sisi kiri setiap cell statistik.
+             * Referensi menunjukkan:
+             * hijau = atribut terang,
+             * merah = atribut gelap,
+             * biru/abu = normal.
+             */
+            const crop = cropRelative(img, 0.29, 0.39, 0.84, 0.82, 1);
+            const canvas = crop.canvas;
+            const ctx = canvas.getContext("2d", { willReadFrequently: true });
+            const w = canvas.width;
+            const h = canvas.height;
+
+            const xRatios = [0.027, 0.35, 0.673];
+            const yRatios = [0.259, 0.414, 0.569, 0.724, 0.869];
+
+            return yRatios.map(yr => xRatios.map(xr => {
+                const x = Math.round(w * xr);
+                const y = Math.round(h * yr);
+                let r = 0, g = 0, b = 0, count = 0;
+
+                for (let yy = y - 4; yy <= y + 4; yy++) {
+                    for (let xx = x - 2; xx <= x + 2; xx++) {
+                        if (xx < 0 || yy < 0 || xx >= w || yy >= h) continue;
+                        const p = ctx.getImageData(xx, yy, 1, 1).data;
+                        r += p[0]; g += p[1]; b += p[2]; count++;
+                    }
+                }
+
+                return classifyPixel(r / count, g / count, b / count);
+            }));
+        }
+
+        function findToneForStat(result, alias, toneGrid, statsCanvas) {
+            const words = Array.isArray(result?.data?.words) ? result.data.words : [];
+            if (!words.length) return "neutral";
+
+            const firstToken = normalize(alias).split(" ")[0];
+            let bestWord = null;
+            let bestScore = -1;
+
+            for (const word of words) {
+                const text = normalize(word.text);
+                const conf = Number(word.confidence ?? word.conf ?? 0);
+
+                if (!text || conf < 10) continue;
+
+                let score = 0;
+                if (text === firstToken) score = 3;
+                else if (text.startsWith(firstToken)) score = 2;
+                else if (text.includes(firstToken)) score = 1;
+
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestWord = word;
+                }
+            }
+
+            if (!bestWord || bestScore < 1 || !bestWord.bbox) return "neutral";
+
+            const cx = (bestWord.bbox.x0 + bestWord.bbox.x1) / 2;
+            const cy = (bestWord.bbox.y0 + bestWord.bbox.y1) / 2;
+
+            const nx = cx / statsCanvas.width;
+            const ny = cy / statsCanvas.height;
+
+            let col = nx < 0.34 ? 0 : (nx < 0.67 ? 1 : 2);
+            const rowCenters = [0.259, 0.414, 0.569, 0.724, 0.869];
+            let row = 0;
+            let minDist = Infinity;
+
+            rowCenters.forEach((v, i) => {
+                const d = Math.abs(ny - v);
+                if (d < minDist) {
+                    minDist = d;
+                    row = i;
+                }
+            });
+
+            if (minDist > 0.12) return "neutral";
+            return toneGrid[row]?.[col] || "neutral";
+        }
+
+        function getNumberOnlyOCRCanvas(source) {
+            const ctx = source.canvas.getContext("2d", { willReadFrequently: true });
+            const data = ctx.getImageData(0, 0, source.canvas.width, source.canvas.height);
+            const out = document.createElement("canvas");
+            out.width = source.canvas.width;
+            out.height = source.canvas.height;
+            const outCtx = out.getContext("2d", { willReadFrequently: true });
+            outCtx.putImageData(data, 0, 0);
+            return thresholdCanvas(prepareGray(out, 1.35), 145);
+        }
+
+        async function ocrOVR(img, progressBase = 0) {
+            // OVR berada pada "OVR: angka", di bawah nama dan di atas Umur.
+            const crop = cropRelative(img, 0.30, 0.135, 0.405, 0.235, 4);
+            const canvas = getNumberOnlyOCRCanvas(crop);
+
+            const result = await Tesseract.recognize(canvas, "eng", {
+                tessedit_pageseg_mode: "7",
+                tessedit_char_whitelist: "0123456789"
+            });
+
+            ocrProgressBar.style.width = Math.max(progressBase, 30) + "%";
+            return extractFirstNumber(result.data.text || "");
+        }
+
+        async function ocrPosition(img, progressBase = 30) {
+            // Hanya badge posisi, bukan seluruh baris pemain.
+            const crop = cropRelative(img, 0.60, 0.225, 0.655, 0.31, 5);
+            const canvas = crop.canvas;
+
+            // Badge berwarna merah membuat threshold grayscale lebih stabil.
+            thresholdCanvas(prepareGray(canvas, 1.15), 100);
+
+            const result = await Tesseract.recognize(canvas, "eng", {
+                tessedit_pageseg_mode: "10",
+                tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            });
+
+            ocrProgressBar.style.width = Math.max(progressBase, 55) + "%";
+            return parsePositionText(result.data.text || "");
+        }
+
+        async function ocrStats(img, progressBase = 55) {
+            // Satu-satunya OCR besar: seluruh panel statistik.
+            const crop = cropRelative(img, 0.29, 0.39, 0.84, 0.82, 2);
+            prepareGray(crop.canvas, 1.22);
+
+            const result = await Tesseract.recognize(crop.canvas, "eng", {
+                tessedit_pageseg_mode: "6",
+                preserve_interword_spaces: "1"
+            });
+
+            ocrProgressBar.style.width = Math.max(progressBase, 95) + "%";
+
+            const parsed = parseStats(result.data.text || "");
+            const toneGrid = buildToneGrid(img);
+
+            const tones = {};
+            parsed.detectedOrder.forEach(item => {
+                tones[item.name] = findToneForStat(result, item.alias, toneGrid, crop.canvas);
+            });
+
+            return {
+                stats: parsed.stats,
+                tones
+            };
+        }
+
+        function renderPlayer(player) {
+            detectedPosition.textContent = player.position || "-";
+            detectedOVR.textContent = player.ovr ?? "-";
+
+            // OVR langsung masuk ke kalkulator.
+            if (player.ovr !== null) {
+                ovrInput.value = player.ovr;
+                ovrInput.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+
+            detectedStats.innerHTML = "";
+            const entries = Object.entries(player.stats);
+
+            if (!entries.length) {
+                detectedStats.innerHTML =
+                    '<div style="grid-column:1/-1;padding:10px;color:#7890ad;font-size:11px;text-align:center;">Statistik belum terbaca. Gunakan screenshot profil yang utuh dan tajam.</div>';
+            } else {
+                entries.forEach(([name, value]) => {
+                    const tone = player.tones?.[name] || "neutral";
+                    const item = document.createElement("div");
+                    item.className = "detected-stat" +
+                        (tone === "bright" ? " tone-bright" : "") +
+                        (tone === "dark" ? " tone-dark" : "");
+                    item.innerHTML = "<span>" + name + "</span><strong>" + value + "</strong>";
+                    detectedStats.appendChild(item);
+                });
+            }
+
+            playerResult.classList.add("show");
+            saveDrillBtn.disabled = !entries.length;
+        }
+
+        function getCurrentDrillAttributes() {
+            return Array.from(attributeTitles)
+                .map(el => el.textContent.trim())
+                .filter(Boolean);
+        }
+
+        function saveAndFillDrill() {
+            if (!detectedPlayer) {
+                setStatus("Belum ada data pemain. Pilih gambar lalu deteksi.", "error");
+                return;
+            }
+
+            const drillAttrs = getCurrentDrillAttributes();
+            if (!drillAttrs.length) {
+                setStatus("Pilih Drill terlebih dahulu agar statistik OCR bisa dimasukkan ke kalkulator.", "error");
+                drillBox.scrollIntoView({ behavior: "smooth", block: "center" });
+                return;
+            }
+
+            let filled = 0;
+            const missing = [];
+
+            drillAttrs.forEach((attr, i) => {
+                const canonical = statAliases[normalize(attr)] || attr;
+                const value = detectedPlayer.stats[canonical];
+                const tone = detectedPlayer.tones?.[canonical] || "neutral";
+
+                if (value !== undefined && value !== null) {
+                    attributes[i].value = value;
+                    setAttributeTone(i, tone);
+                    filled++;
+                } else {
+                    attributes[i].value = "";
+                    setAttributeTone(i, "neutral");
+                    missing.push(attr);
+                }
+            });
+
+            calculate();
+
+            if (missing.length) {
+                setStatus(
+                    "Diisi " + filled + " atribut. Belum terbaca: " + missing.join(", ") + ".",
+                    "error"
+                );
+            } else {
+                setStatus(
+                    "Berhasil! " + filled + " statistik dari \"" + drillBoxLabel.textContent + "\" masuk ke kalkulator.",
+                    "success"
+                );
+            }
+
+            document.querySelector(".result")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+
+        async function scanImage() {
+            if (!selectedFile) return;
+
+            if (!window.Tesseract) {
+                setStatus("Mesin OCR belum tersedia. Pastikan perangkat terhubung ke internet lalu coba lagi.", "error");
+                return;
+            }
+
+            scanBtn.disabled = true;
+            saveDrillBtn.disabled = true;
+            ocrProgress.classList.add("show");
+            ocrProgressBar.style.width = "2%";
+            setStatus("OCR ringan: membaca OVR, posisi, lalu panel statistik...");
+
+            try {
+                const img = await loadImage(selectedFile);
+
+                // Hanya 3 OCR terarah, bukan OCR seluruh screenshot berulang-ulang.
+                const ovr = await ocrOVR(img, 5);
+                setStatus("OVR terbaca. Membaca posisi...", "");
+                const position = await ocrPosition(img, 30);
+                setStatus("Posisi terbaca. Membaca panel statistik...", "");
+                const statsResult = await ocrStats(img, 55);
+
+                detectedPlayer = {
+                    position: position || "-",
+                    ovr: ovr,
+                    stats: statsResult.stats,
+                    tones: statsResult.tones
+                };
+
+                renderPlayer(detectedPlayer);
+
+                const statCount = Object.keys(detectedPlayer.stats).length;
+                if (ovr !== null && position && statCount > 0) {
+                    setStatus(
+                        "Selesai. OVR " + ovr + " • posisi " + position + " • " + statCount + " statistik terbaca.",
+                        "success"
+                    );
+                } else if (ovr !== null || position || statCount > 0) {
+                    setStatus(
+                        "Sebagian data terbaca. OVR/posisi/statistik yang ditemukan sudah ditampilkan.",
+                        "success"
+                    );
+                } else {
+                    setStatus(
+                        "Data belum terbaca. Pastikan screenshot profil Top Eleven utuh dan tidak terlalu terkompresi.",
+                        "error"
+                    );
+                }
+
+                ocrProgressBar.style.width = "100%";
+            } catch (error) {
+                console.error(error);
+                setStatus("Gagal membaca gambar. Coba screenshot profil Top Eleven yang lebih jelas.", "error");
+            } finally {
+                scanBtn.disabled = !selectedFile;
+                setTimeout(() => ocrProgress.classList.remove("show"), 700);
+            }
+        }
+
+        function setSelectedFile(file) {
+            if (!file || !file.type.startsWith("image/")) {
+                setStatus("File harus berupa gambar JPG, PNG, WEBP, atau format gambar lain.", "error");
+                return;
+            }
+
+            selectedFile = file;
+            detectedPlayer = null;
+            playerResult.classList.remove("show");
+            saveDrillBtn.disabled = true;
+            clearStatus();
+
+            if (selectedImageURL) URL.revokeObjectURL(selectedImageURL);
+            selectedImageURL = URL.createObjectURL(file);
+            previewImg.src = selectedImageURL;
+            preview.classList.add("show");
+            scanBtn.disabled = false;
+
+            setStatus("Gambar siap. Tekan \"Deteksi Statistik\" untuk membaca OVR, posisi, dan statistik.");
+        }
+
+        function clearImage() {
+            if (selectedImageURL) URL.revokeObjectURL(selectedImageURL);
+            selectedImageURL = "";
+            selectedFile = null;
+            detectedPlayer = null;
+            imageInput.value = "";
+            previewImg.removeAttribute("src");
+            preview.classList.remove("show");
+            playerResult.classList.remove("show");
+            scanBtn.disabled = true;
+            saveDrillBtn.disabled = true;
+            clearStatus();
+            ocrProgress.classList.remove("show");
+            ocrProgressBar.style.width = "0%";
+        }
+
+        imageInput.addEventListener("change", e => {
+            const file = e.target.files?.[0];
+            if (file) setSelectedFile(file);
+        });
+
+        replaceBtn.addEventListener("click", () => imageInput.click());
+        removeImageBtn.addEventListener("click", clearImage);
+        scanBtn.addEventListener("click", scanImage);
+        saveDrillBtn.addEventListener("click", saveAndFillDrill);
+
+        ["dragenter", "dragover"].forEach(eventName => {
+            imagePick.addEventListener(eventName, e => {
+                e.preventDefault();
+                imagePick.classList.add("dragover");
+            });
+        });
+
+        ["dragleave", "drop"].forEach(eventName => {
+            imagePick.addEventListener(eventName, e => {
+                e.preventDefault();
+                imagePick.classList.remove("dragover");
+            });
+        });
+
+        imagePick.addEventListener("drop", e => {
+            const file = e.dataTransfer?.files?.[0];
+            if (file) setSelectedFile(file);
+        });
+
+        // Jika drill dipilih setelah OCR, tombol isi langsung aktif.
+        drillBox.addEventListener("click", () => {
+            if (detectedPlayer) saveDrillBtn.disabled = false;
+        });
+
+        /*
+         * Tidak ada localStorage restore.
+         * Setiap refresh halaman kembali ke UI default:
+         * - OVR kosong
+         * - Drill belum dipilih
+         * - Statistik kosong
+         * - Hasil OCR kosong
+         * - Tidak ada nama/rekomendasi yang dipulihkan
+         */
+    })();
+
+</script>
+
+</body>
+</html>
