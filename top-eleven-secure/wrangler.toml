@@ -1,0 +1,7 @@
+name = "top-eleven-secure"
+compatibility_date = "2026-08-19"
+
+[assets]
+directory = "./assets"
+
+# Secrets are configured in Cloudflare Dashboard, not committed to GitHub.
