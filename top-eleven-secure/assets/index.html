@@ -74,15 +74,13 @@ async function checkKey(){
 keyBtn.addEventListener("click",checkKey);
 keyInput.addEventListener("keydown",e=>{if(e.key==="Enter")checkKey()});
 
-(async()=>{
+(()=>{
+  // V3: selalu tampilkan halaman key saat membuka "/".
+  // Auto-login sengaja dinonaktifkan agar key gate dapat diuji dengan jelas.
   const params=new URLSearchParams(location.search);
   const notice=params.get("expired");
   if(notice)setMsg(notice,"error");
-  const savedKey=localStorage.getItem(SAVED_KEY_FLAG);
-  if(!savedKey)return;
-  const result=await validateAndLogin(savedKey,true);
-  if(result.ok){ location.replace("/app"); }
-  else if(result.message && !notice){ localStorage.removeItem(SAVED_KEY_FLAG); setMsg(result.message,"error"); }
+  keyInput.focus();
 })();
 </script>
 </body>
