@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
-<title>Login Key â€” Top Eleven Calculator</title>
+<title>Login Key 🔒” Top Eleven Calculator</title>
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif}
@@ -48,19 +48,19 @@ button{width:100%;height:46px;margin-top:11px;border:0;border-radius:9px;backgro
 </head>
 <body>
 <main class="card">
-  <div style="font-size:40px;margin-bottom:9px">ðŸ”’</div>
-  <div class="title">Masukkan Key Akses</div>
+  <div style="font-size:40px;margin-bottom:9px">🔑”’</div>
+  <div class="title">Masukkan </div>
   <div class="sub">Aplikasi ini terkunci. Masukkan key yang valid untuk melanjutkan.</div>
   <input id="keyGateInput" type="text" placeholder="Masukkan key di sini" autocomplete="off" spellcheck="false">
   <button id="keyGateBtn">Masuk</button>
   <div id="keyGateMsg" class="msg"></div>
 
   <div id="buyWrap" class="buy-wrap">
-    <button id="buyKeyBtn" class="buy-btn"><span>ðŸ›’ Beli Key Akses</span></button>
+    <button id="buyKeyBtn" class="buy-btn"><span>🔑 Beli Key Akses</span></button>
     <div class="buy-hint">Belum punya key? Tekan tombol di atas.</div>
   </div>
 
-  <div class="badge">Protected â€¢ Firestore Key System</div>
+  <div class="badge">Protected by Firestore Key System</div>
 </main>
 
 <div id="buyModal" class="modal" aria-hidden="true">
@@ -138,37 +138,69 @@ async function validateAndLogin(inputKey,silent=false){
    Kalau cookie hilang/expired, key yang tersimpan di perangkat dicoba ulang
    secara otomatis. Firestore tetap memverifikasi deviceId. */
 async function restoreAccess(){
+  /*
+   * Saat halaman login baru dibuka / di-refresh:
+   * - UI harus tetap bersih seperti kondisi awal.
+   * - Jangan menampilkan "Sesi tidak valid".
+   * - Jangan menampilkan tombol Beli Key.
+   *
+   * Jika session masih valid, langsung masuk.
+   * Jika session hilang tetapi key tersimpan, coba pulihkan diam-diam.
+   */
+  hideBuy();
+  setMsg("");
+
   try{
-    const r=await fetch("/api/session",{method:"GET",credentials:"same-origin",cache:"no-store"});
+    const r=await fetch("/api/session",{
+      method:"GET",
+      credentials:"same-origin",
+      cache:"no-store"
+    });
     const data=await r.json().catch(()=>({}));
+
     if(r.ok&&data.ok){
       location.replace("/app");
       return;
     }
-  }catch(e){}
+  }catch(e){
+    /* Tetap tampilkan UI default. */
+  }
 
   const savedKey=localStorage.getItem(SAVED_KEY_FLAG);
-  if(!savedKey)return;
-
-  setMsg("Memulihkan akses...");
-  const result=await validateAndLogin(savedKey,true);
-  if(result.ok){
-    setMsg("Akses dipulihkan. Membuka aplikasi...","success");
-    setTimeout(()=>location.replace("/app"),180);
-  }else{
-    /* Jangan hapus key otomatis kalau hanya gangguan server. */
-    if(result.message.includes("tidak ditemukan") ||
-       result.message.includes("salah") ||
-       result.message.includes("dinonaktifkan") ||
-       result.message.includes("kedaluwarsa") ||
-       result.message.includes("perangkat lain")){
-      localStorage.removeItem(SAVED_KEY_FLAG);
-      setMsg(result.message,"error");
-      showBuy();
-    }else{
-      setMsg("Sesi perlu diperiksa kembali. Masukkan key untuk melanjutkan.","error");
-    }
+  if(!savedKey){
+    /* Tidak ada key tersimpan: benar-benar kembali ke UI awal. */
+    keyBtn.disabled=false;
+    keyInput.value="";
+    setMsg("");
+    hideBuy();
+    return;
   }
+
+  /* Pulihkan key secara diam-diam tanpa menampilkan error sementara. */
+  const result=await validateAndLogin(savedKey,true);
+
+  if(result.ok){
+    location.replace("/app");
+    return;
+  }
+
+  /* Hanya tampilkan tombol Beli jika memang key sudah tidak dapat dipakai. */
+  const invalidKey=
+    result.message.includes("tidak ditemukan") ||
+    result.message.includes("salah") ||
+    result.message.includes("dinonaktifkan") ||
+    result.message.includes("kedaluwarsa") ||
+    result.message.includes("perangkat lain");
+
+  if(invalidKey){
+    localStorage.removeItem(SAVED_KEY_FLAG);
+  }
+
+  /* Tetap kembali ke tampilan login default setelah refresh. */
+  keyBtn.disabled=false;
+  keyInput.value="";
+  setMsg("");
+  hideBuy();
 }
 
 async function checkKey(){
@@ -201,9 +233,14 @@ async function checkKey(){
 keyBtn.addEventListener("click",checkKey);
 keyInput.addEventListener("keydown",e=>{if(e.key==="Enter")checkKey()});
 
+// =====================================================
+// LINK PEMBELIAN KEY
+// GANTI URL DI BAWAH INI SAJA
+// =====================================================
+const BUY_KEY_URL="https://contoh-link-pembelian-kamu.com";
+
 buyKeyBtn.addEventListener("click",()=>{
-  buyModal.classList.add("show");
-  buyModal.setAttribute("aria-hidden","false");
+  window.location.href=BUY_KEY_URL;
 });
 closeModal.addEventListener("click",()=>{
   buyModal.classList.remove("show");
@@ -217,15 +254,11 @@ buyModal.addEventListener("click",e=>{
 });
 
 (async()=>{
-  const params=new URLSearchParams(location.search);
-  const notice=params.get("expired");
-  if(notice){
-    setMsg(notice,"error");
-    showBuy();
-  }
+  /* Jangan membawa status error/popup dari URL saat refresh. */
   await restoreAccess();
   keyInput.focus();
 })();
 </script>
 </body>
 </html>
+
