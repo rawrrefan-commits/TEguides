@@ -200,12 +200,12 @@ export default {
         try{return json({ok:true,...calculate(body)});}catch(e){return json({ok:false,message:e.message||"Perhitungan gagal."},400);}
       }
       if(url.pathname==="/app" || url.pathname==="/app/")return serveApp(request,env);
-      if(url.pathname==="/calculator.html"){
+      if(url.pathname==="/calculator.html" || url.pathname==="/assets/calculator.html"){
         const auth=await requireSession(request,env); if(!auth.ok)return auth.response;
         return serveApp(request,env);
       }
-      // Jangan biarkan asset private lain terakses langsung jika nanti ditambahkan.
-      if(url.pathname.startsWith("/private/"))return new Response("Not Found",{status:404});
+      // Jangan biarkan asset kalkulator dibypass lewat path asset langsung.
+      if(url.pathname.startsWith("/private/") || url.pathname==="/assets/calculator.html")return new Response("Not Found",{status:404});
       return env.ASSETS.fetch(request);
     }catch(e){
       console.error(e);
