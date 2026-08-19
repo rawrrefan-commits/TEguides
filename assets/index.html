@@ -65,8 +65,8 @@ button{width:100%;height:46px;margin-top:11px;border:0;border-radius:9px;backgro
 
 <div id="buyModal" class="modal" aria-hidden="true">
   <div class="modal-card">
-    <div style="font-size:36px;margin-bottom:7px">ðŸ›’</div>
-    <div class="modal-title">Beli Key Akses</div>
+    <div style="font-size:36px;margin-bottom:7px">🔑</div>
+    <div class="modal-title">Beli Akses key</div>
     <div class="modal-text">Key yang kamu masukkan tidak valid atau belum terdaftar. Hubungi admin untuk mendapatkan key akses.</div>
     <button id="closeModal" class="modal-close">Tutup</button>
   </div>
@@ -237,10 +237,10 @@ keyInput.addEventListener("keydown",e=>{if(e.key==="Enter")checkKey()});
 // LINK PEMBELIAN KEY
 // GANTI URL DI BAWAH INI SAJA
 // =====================================================
-const BUY_KEY_URL="https://wa.me/6285866035732?text=Halo%20kak%2C%20saya%20mau%20order%20Key%20TECVP%20%F0%9F%99%8F%0APaket%3A%20(brp%20hari)%0AJumlah%3A";
 
 buyKeyBtn.addEventListener("click",()=>{
-  window.location.href=BUY_KEY_URL;
+  // Halaman pembayaran berada satu folder dengan index.html
+  window.location.href="pembayaran.html";
 });
 closeModal.addEventListener("click",()=>{
   buyModal.classList.remove("show");
@@ -261,4 +261,5 @@ buyModal.addEventListener("click",e=>{
 </script>
 </body>
 </html>
+
 
