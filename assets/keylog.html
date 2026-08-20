@@ -337,7 +337,7 @@ async function restoreAccess(){
   const result=await validateAndLogin(savedKey,true);
 
   if(result.ok){
-    location.replace("/app");
+    location.replace("/calculator");
     return;
   }
 
