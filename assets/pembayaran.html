@@ -11,6 +11,193 @@
 .wa-btn:disabled{opacity:.55;cursor:not-allowed;box-shadow:none}.wa-btn:disabled:after{display:none}
 .hint{margin-top:8px;font-size:10.5px;color:#8199b8}
 </style>
+<style>
+
+/* ===== PAYMENT CARD ===== */
+.price-list{gap:11px !important}
+.price-item{
+  border-color:#d4e3f1 !important;
+  background:
+    linear-gradient(135deg,rgba(255,255,255,.98),rgba(239,247,254,.96)) !important;
+  box-shadow:0 7px 17px rgba(24,70,120,.07) !important;
+}
+.price-item::after{
+  content:"";
+  position:absolute;
+  left:0;top:0;bottom:0;width:3px;
+  background:linear-gradient(#1b6dcc,#5bbdff);
+  opacity:.8;
+}
+.price-item.featured{
+  border-color:#4d9ee0 !important;
+  background:linear-gradient(135deg,#fafdff,#eaf5ff) !important;
+  box-shadow:0 10px 24px rgba(31,112,190,.15) !important;
+}
+.price-item.selected{
+  border-color:#2087d5 !important;
+  box-shadow:0 0 0 2px rgba(32,135,213,.20),0 10px 25px rgba(23,104,199,.13) !important;
+}
+.price-item.selected .duration,.price-item.selected .price{color:#1264ad !important}
+.price{color:#173d76 !important}
+.wa-btn{
+  background:linear-gradient(135deg,#125e9d,#1676c7,#35a1ed) !important;
+  box-shadow:0 10px 23px rgba(23,104,199,.24) !important;
+}
+.wa-icon{
+  color:#1768c7 !important;
+  box-shadow:0 1px 5px rgba(0,0,0,.08);
+}
+.note{
+  background:linear-gradient(145deg,#f7fbff,#edf5fc) !important;
+  border-color:#d7e6f3 !important;
+}
+.note-title{color:#173f70 !important}
+.hint{color:#7891ae !important}
+
+/* ===== TOP ELEVEN GUIDE — SHARED VISUAL THEME OVERRIDE ===== */
+:root{
+  --te-navy:#102f5d;
+  --te-blue:#1768c7;
+  --te-sky:#58b9ff;
+  --te-ice:#eef7ff;
+  --te-line:#cbdff2;
+  --te-text:#173a67;
+  --te-muted:#7189a7;
+  --te-shadow:0 18px 45px rgba(21,65,116,.16);
+}
+html{background:#f7fbff}
+body{
+  position:relative;
+  overflow-x:hidden;
+  background:
+    radial-gradient(circle at 50% -8%,rgba(255,255,255,.98) 0 18%,transparent 43%),
+    radial-gradient(circle at 8% 20%,rgba(75,151,229,.13),transparent 24%),
+    linear-gradient(145deg,#f7fbff 0%,#edf5fc 48%,#e6f0fa 100%) !important;
+  color:var(--te-text);
+}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  opacity:.72;
+  background:
+    radial-gradient(circle,rgba(34,101,169,.12) 1.25px,transparent 1.5px) 0 0/22px 22px,
+    linear-gradient(115deg,transparent 0 46%,rgba(63,139,211,.045) 47% 48%,transparent 49%) 0 0/110px 110px;
+}
+body::after{
+  content:"";
+  position:fixed;
+  width:460px;height:190px;
+  left:50%;top:-105px;
+  transform:translateX(-50%);
+  pointer-events:none;
+  border:1px solid rgba(44,120,196,.16);
+  border-radius:50%;
+  box-shadow:0 0 0 18px rgba(44,120,196,.025),0 0 0 42px rgba(44,120,196,.02);
+}
+.card{
+  position:relative;
+  z-index:1;
+  border:1px solid rgba(255,255,255,.95) !important;
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.97),rgba(244,250,255,.94)) !important;
+  box-shadow:var(--te-shadow),0 2px 8px rgba(20,60,105,.08) !important;
+  overflow:hidden;
+}
+.card::before{
+  content:"";
+  position:absolute;
+  left:0;right:0;top:0;height:4px;
+  background:linear-gradient(90deg,var(--te-navy),var(--te-blue),var(--te-sky),var(--te-blue),var(--te-navy));
+  opacity:.95;
+}
+.title{color:var(--te-navy) !important;letter-spacing:.2px}
+.sub{color:var(--te-muted) !important}
+input{
+  border-color:#c9dced !important;
+  background:rgba(255,255,255,.9) !important;
+  color:var(--te-navy) !important;
+  box-shadow:inset 0 1px 3px rgba(20,61,105,.04);
+}
+input:focus{
+  border-color:var(--te-blue) !important;
+  box-shadow:0 0 0 3px rgba(23,104,199,.12),0 5px 15px rgba(23,104,199,.08) !important;
+}
+button:not(.back-btn):not(.modal-close){
+  background:linear-gradient(135deg,#123866 0%,#1768c7 62%,#3d9be8 100%) !important;
+  box-shadow:0 9px 22px rgba(23,104,199,.24) !important;
+  border:1px solid rgba(255,255,255,.16) !important;
+  position:relative;
+  overflow:hidden;
+}
+button:not(.back-btn):not(.modal-close)::after{
+  content:"";
+  position:absolute;
+  inset:1px;
+  border-radius:inherit;
+  background:linear-gradient(120deg,rgba(255,255,255,.18),transparent 35%,transparent 65%,rgba(255,255,255,.07));
+  pointer-events:none;
+}
+button:not(.back-btn):not(.modal-close):active{transform:translateY(1px) scale(.995)}
+.back-btn{
+  color:var(--te-blue) !important;
+  font-weight:800;
+}
+.badge{
+  background:linear-gradient(135deg,#102f5d,#1768c7,#4aa9ed) !important;
+  box-shadow:0 7px 18px rgba(23,104,199,.2) !important;
+}
+.modal{
+  background:rgba(10,31,58,.56) !important;
+  backdrop-filter:blur(5px);
+}
+.modal-card{
+  border:1px solid #d7e8f7;
+  box-shadow:0 22px 60px rgba(5,34,67,.28) !important;
+}
+.modal-close{
+  background:#edf5fc !important;
+  color:#244d80 !important;
+  box-shadow:none !important;
+}
+/* Premium icon treatment without touching HTML/JS */
+.card > div[style*="font-size:40px"],
+.card .logo{
+  width:70px !important;height:70px !important;
+  margin:0 auto 12px !important;
+  border-radius:20px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  font-size:0 !important;
+  color:transparent !important;
+  background:
+    radial-gradient(circle at 32% 25%,rgba(255,255,255,.32),transparent 28%),
+    linear-gradient(145deg,#102f5d,#1768c7 65%,#56b8fa) !important;
+  box-shadow:0 12px 28px rgba(16,47,93,.22),inset 0 1px 0 rgba(255,255,255,.35) !important;
+  border:1px solid rgba(255,255,255,.55) !important;
+  position:relative;
+}
+.card > div[style*="font-size:40px"]::before,
+.card .logo::before{
+  content:"✦";
+  font-size:34px;
+  line-height:1;
+  color:#fff;
+  text-shadow:0 2px 8px rgba(0,0,0,.22);
+}
+.card > div[style*="font-size:40px"]::after,
+.card .logo::after{
+  content:"";
+  position:absolute;
+  inset:9px;
+  border:1px solid rgba(255,255,255,.28);
+  border-radius:15px;
+}
+
+</style>
 </head>
 <body>
 <main class="card">
@@ -18,15 +205,15 @@
 <div class="title">Beli Key Akses</div>
 <div class="sub">Pilih masa aktif key yang sesuai dengan kebutuhan kamu.</div>
 <section class="price-list">
-<div class="price-item" data-package="1 Hari" data-wa="https://wa.me/6285866035732?text=Halo%20kak%2C%20saya%20mau%20order%20Key%20TECVP%20%F0%9F%99%8F%0APaket%3A%201%20Hari%0AJumlah%3A%20"><div class="duration">1 Hari<small>Akses selama 24 jam</small></div><div class="price">Rp750</div></div>
-<div class="price-item" data-package="7 Hari" data-wa="https://wa.me/6285866035732?text=Halo%20kak%2C%20saya%20mau%20order%20Key%20TECVP%20%F0%9F%99%8F%0APaket%3A%207%20Hari%0AJumlah%3A%20"><div class="duration">7 Hari<small>Akses selama 7 hari</small></div><div class="price">Rp5.000</div></div>
-<div class="price-item featured" data-package="30 Hari" data-wa="https://wa.me/6285866035732?text=Halo%20kak%2C%20saya%20mau%20order%20Key%20TECVP%20%F0%9F%99%8F%0APaket%3A%2030%20Hari%0AJumlah%3A%20"><div class="duration">30 Hari<small>Akses selama 30 hari</small></div><div class="price">Rp15.000</div></div>
+<div class="price-item" data-package="1 Hari" data-wa="https://api.whatsapp.com/send?phone=6285866035732&text=Halo%20kak%2C%20saya%20mau%20order%20Key%20TECVP%20%F0%9F%99%8F%0APaket%3A%201%20Hari%0AJumlah%3A%20"><div class="duration">1 Hari<small>Akses selama 24 jam</small></div><div class="price">Rp750</div></div>
+<div class="price-item" data-package="7 Hari" data-wa="https://api.whatsapp.com/send?phone=6281234567890&text=Halo%20kak%2C%20saya%20mau%20order%20Key%20TECVP%20%F0%9F%99%8F%0APaket%3A%207%20Hari%0AJumlah%3A%20"><div class="duration">7 Hari<small>Akses selama 7 hari</small></div><div class="price">Rp5.000</div></div>
+<div class="price-item featured" data-package="30 Hari" data-wa="https://api.whatsapp.com/send?phone=6281234567890&text=Halo%20kak%2C%20saya%20mau%20order%20Key%20TECVP%20%F0%9F%99%8F%0APaket%3A%2030%20Hari%0AJumlah%3A%20"><div class="duration">30 Hari<small>Akses selama 30 hari</small></div><div class="price">Rp15.000</div></div>
 </section>
 <div class="hint" id="hint">👆 Pilih paket dulu sebelum chat admin</div>
 <button id="waBtn" class="wa-btn" disabled><span class="wa-icon">☏</span>Chat Admin via WhatsApp</button>
 <div class="note"><div class="note-title">📌 Catatan Transaksi</div><p>Silakan hubungi admin terlebih dahulu sebelum melakukan pembayaran. Pilih masa aktif key yang kamu inginkan dan ikuti instruksi dari admin. Setelah pembayaran dikonfirmasi, key akan diberikan oleh admin. Jangan membagikan key kepada orang lain karena key dapat terikat dengan perangkat yang pertama menggunakannya.</p></div>
 <div class="badge">Protected by Firestore Key System</div>
-<a class="back" href="index.html">← Kembali ke halaman login</a>
+<a class="back" href="keylog.html">← Kembali ke halaman login</a>
 </main>
 <script>
 // Setiap paket punya link WA sendiri lewat atribut data-wa di masing-masing .price-item di atas.
@@ -53,4 +240,3 @@ waBtn.addEventListener("click",()=>{
 </script>
 </body>
 </html>
-
