@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Login Key ” Top Eleven Calculator</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(145deg,#eef5fc 0%,#dce9f7 48%,#c9dcef 100%)}
+.card{width:100%;max-width:360px;background:rgba(255,255,255,.96);border-radius:14px;padding:28px 24px;text-align:center;box-shadow:0 18px 45px rgba(24,59,114,.16);opacity:0;transform:translateY(14px);animation:masuk .45s ease-out forwards}
+.card.leaving{animation:keluar .22s ease-in forwards}
+@keyframes masuk{to{opacity:1;transform:translateY(0)}}
+@keyframes keluar{to{opacity:0;transform:translateY(-10px) scale(.97)}}
+.back-btn{display:inline-flex;align-items:center;gap:5px;margin-bottom:14px;background:none;border:0;box-shadow:none;width:auto;height:auto;padding:4px 2px;color:#2874c6;font-size:13px;font-weight:700;cursor:pointer}
+.back-btn:active{opacity:.6}
+.title{font-size:22px;font-weight:800;color:#173d76}.sub{margin:8px 0 20px;color:#6c88ac;font-size:13px;line-height:1.45}
+input{width:100%;height:46px;border:1px solid #c9d8e8;border-radius:9px;padding:0 12px;font-size:14px;outline:none;text-align:center}input:focus{border-color:#2874c6;box-shadow:0 0 0 3px rgba(40,116,198,.12)}
+button{width:100%;height:46px;margin-top:11px;border:0;border-radius:9px;background:linear-gradient(135deg,#183b72,#2874c6);color:#fff;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 8px 18px rgba(24,59,114,.25)}button:disabled{opacity:.6;cursor:not-allowed}
+.msg{min-height:18px;margin-top:11px;font-size:12.5px;font-weight:600;color:#6c88ac}.error{color:#c93b3b}.success{color:#1f9d55}
+.badge{display:inline-flex;margin-top:15px;padding:6px 13px;border-radius:999px;background:linear-gradient(135deg,#183b72,#2874c6);color:#fff;font-size:11px;font-weight:700}
+
+/* Tombol beli key: selalu tampil */
+.buy-wrap{display:block;margin-top:10px}
+.buy-btn{
+  position:relative;overflow:hidden;
+  margin-top:0;
+  background:linear-gradient(135deg,#ff8a00,#ff4d00);
+  box-shadow:0 9px 22px rgba(255,105,0,.30);
+  animation:buyPulse 1.7s ease-in-out infinite;
+}
+.buy-btn::after{
+  content:"";position:absolute;top:0;left:-80%;width:55%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.42),transparent);
+  transform:skewX(-20deg);animation:shine 2.4s linear infinite;
+}
+.buy-btn span{position:relative;z-index:1}
+.buy-hint{margin-top:6px;color:#8b6b4f;font-size:10.5px}
+@keyframes buyPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}
+@keyframes shine{0%{left:-80%}45%,100%{left:140%}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+/* Modal sederhana untuk tombol Beli Key */
+.modal{display:none;position:fixed;inset:0;background:rgba(9,28,52,.52);align-items:center;justify-content:center;padding:20px;z-index:20}
+.modal.show{display:flex}
+.modal-card{width:100%;max-width:340px;background:#fff;border-radius:16px;padding:24px 20px;text-align:center;box-shadow:0 20px 55px rgba(0,0,0,.25);animation:fadeUp .2s ease}
+.modal-title{font-size:19px;font-weight:800;color:#173d76}
+.modal-text{margin:8px 0 15px;color:#6c88ac;font-size:13px;line-height:1.5}
+.modal-close{background:#eef3f9;color:#274c78;box-shadow:none}
+</style>
+<style>
+
+/* ===== LOGIN / ACCESS CARD ===== */
+#loginCard{padding-top:31px !important}
+#loginCard::after{
+  content:"TOP ELEVEN • GUIDE";
+  display:block;
+  margin-top:16px;
+  color:#91a8c1;
+  font-size:8px;
+  font-weight:800;
+  letter-spacing:2.4px;
+}
+#keyGateBtn{
+  height:49px !important;
+  letter-spacing:.6px;
+}
+.buy-wrap{margin-top:12px !important}
+.buy-btn{
+  background:linear-gradient(135deg,#123866,#1768c7,#43a7ee) !important;
+  box-shadow:0 10px 24px rgba(23,104,199,.24) !important;
+  animation:none !important;
+}
+.buy-hint{color:#8198b2 !important}
+
+/* ===== TOP ELEVEN GUIDE — SHARED VISUAL THEME OVERRIDE ===== */
+:root{
+  --te-navy:#102f5d;
+  --te-blue:#1768c7;
+  --te-sky:#58b9ff;
+  --te-ice:#eef7ff;
+  --te-line:#cbdff2;
+  --te-text:#173a67;
+  --te-muted:#7189a7;
+  --te-shadow:0 18px 45px rgba(21,65,116,.16);
+}
+html{background:#f7fbff}
+body{
+  position:relative;
+  overflow-x:hidden;
+  background:
+    radial-gradient(circle at 50% -8%,rgba(255,255,255,.98) 0 18%,transparent 43%),
+    radial-gradient(circle at 8% 20%,rgba(75,151,229,.13),transparent 24%),
+    linear-gradient(145deg,#f7fbff 0%,#edf5fc 48%,#e6f0fa 100%) !important;
+  color:var(--te-text);
+}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  opacity:.72;
+  background:
+    radial-gradient(circle,rgba(34,101,169,.12) 1.25px,transparent 1.5px) 0 0/22px 22px,
+    linear-gradient(115deg,transparent 0 46%,rgba(63,139,211,.045) 47% 48%,transparent 49%) 0 0/110px 110px;
+}
+body::after{
+  content:"";
+  position:fixed;
+  width:460px;height:190px;
+  left:50%;top:-105px;
+  transform:translateX(-50%);
+  pointer-events:none;
+  border:1px solid rgba(44,120,196,.16);
+  border-radius:50%;
+  box-shadow:0 0 0 18px rgba(44,120,196,.025),0 0 0 42px rgba(44,120,196,.02);
+}
+.card{
+  position:relative;
+  z-index:1;
+  border:1px solid rgba(255,255,255,.95) !important;
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.97),rgba(244,250,255,.94)) !important;
+  box-shadow:var(--te-shadow),0 2px 8px rgba(20,60,105,.08) !important;
+  overflow:hidden;
+}
+.card::before{
+  content:"";
+  position:absolute;
+  left:0;right:0;top:0;height:4px;
+  background:linear-gradient(90deg,var(--te-navy),var(--te-blue),var(--te-sky),var(--te-blue),var(--te-navy));
+  opacity:.95;
+}
+.title{color:var(--te-navy) !important;letter-spacing:.2px}
+.sub{color:var(--te-muted) !important}
+input{
+  border-color:#c9dced !important;
+  background:rgba(255,255,255,.9) !important;
+  color:var(--te-navy) !important;
+  box-shadow:inset 0 1px 3px rgba(20,61,105,.04);
+}
+input:focus{
+  border-color:var(--te-blue) !important;
+  box-shadow:0 0 0 3px rgba(23,104,199,.12),0 5px 15px rgba(23,104,199,.08) !important;
+}
+button:not(.back-btn):not(.modal-close){
+  background:linear-gradient(135deg,#123866 0%,#1768c7 62%,#3d9be8 100%) !important;
+  box-shadow:0 9px 22px rgba(23,104,199,.24) !important;
+  border:1px solid rgba(255,255,255,.16) !important;
+  position:relative;
+  overflow:hidden;
+}
+button:not(.back-btn):not(.modal-close)::after{
+  content:"";
+  position:absolute;
+  inset:1px;
+  border-radius:inherit;
+  background:linear-gradient(120deg,rgba(255,255,255,.18),transparent 35%,transparent 65%,rgba(255,255,255,.07));
+  pointer-events:none;
+}
+button:not(.back-btn):not(.modal-close):active{transform:translateY(1px) scale(.995)}
+.back-btn{
+  color:var(--te-blue) !important;
+  font-weight:800;
+}
+.badge{
+  background:linear-gradient(135deg,#102f5d,#1768c7,#4aa9ed) !important;
+  box-shadow:0 7px 18px rgba(23,104,199,.2) !important;
+}
+.modal{
+  background:rgba(10,31,58,.56) !important;
+  backdrop-filter:blur(5px);
+}
+.modal-card{
+  border:1px solid #d7e8f7;
+  box-shadow:0 22px 60px rgba(5,34,67,.28) !important;
+}
+.modal-close{
+  background:#edf5fc !important;
+  color:#244d80 !important;
+  box-shadow:none !important;
+}
+/* Premium icon treatment without touching HTML/JS */
+.card > div[style*="font-size:40px"],
+.card .logo{
+  width:70px !important;height:70px !important;
+  margin:0 auto 12px !important;
+  border-radius:20px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  font-size:0 !important;
+  color:transparent !important;
+  background:
+    radial-gradient(circle at 32% 25%,rgba(255,255,255,.32),transparent 28%),
+    linear-gradient(145deg,#102f5d,#1768c7 65%,#56b8fa) !important;
+  box-shadow:0 12px 28px rgba(16,47,93,.22),inset 0 1px 0 rgba(255,255,255,.35) !important;
+  border:1px solid rgba(255,255,255,.55) !important;
+  position:relative;
+}
+.card > div[style*="font-size:40px"]::before,
+.card .logo::before{
+  content:"✦";
+  font-size:34px;
+  line-height:1;
+  color:#fff;
+  text-shadow:0 2px 8px rgba(0,0,0,.22);
+}
+.card > div[style*="font-size:40px"]::after,
+.card .logo::after{
+  content:"";
+  position:absolute;
+  inset:9px;
+  border:1px solid rgba(255,255,255,.28);
+  border-radius:15px;
+}
+
+</style>
+</head>
+<body>
+<main class="card" id="loginCard">
+  <button id="backBtn" class="back-btn">&larr; Kembali ke Menu</button>
+  <div style="font-size:40px;margin-bottom:9px">🔒</div>
+  <div class="title">Masukkan Key</div>
+  <div class="sub">Aplikasi ini terkunci. Masukkan key yang valid untuk melanjutkan.</div>
+  <input id="keyGateInput" type="text" placeholder="Masukkan key di sini" autocomplete="off" spellcheck="false">
+  <button id="keyGateBtn">Masuk</button>
+  <div id="keyGateMsg" class="msg"></div>
+
+  <div id="buyWrap" class="buy-wrap">
+    <button id="buyKeyBtn" class="buy-btn"><span>🔑 Beli Akses Key</span></button>
+    <div class="buy-hint">Belum punya key? Tekan tombol di atas.</div>
+  </div>
+
+  <div class="badge">Protected by Firestore Key System</div>
+</main>
+
+<div id="buyModal" class="modal" aria-hidden="true">
+  <div class="modal-card">
+    <div style="font-size:36px;margin-bottom:7px">🔑</div>
+    <div class="modal-title">Beli Akses key</div>
+    <div class="modal-text">Key yang kamu masukkan tidak valid atau belum terdaftar. Hubungi admin untuk mendapatkan key akses.</div>
+    <button id="closeModal" class="modal-close">Tutup</button>
+  </div>
+</div>
+
+<script>
+const keyInput=document.getElementById("keyGateInput");
+const keyBtn=document.getElementById("keyGateBtn");
+const keyMsg=document.getElementById("keyGateMsg");
+const buyKeyBtn=document.getElementById("buyKeyBtn");
+const buyModal=document.getElementById("buyModal");
+const closeModal=document.getElementById("closeModal");
+const loginCard=document.getElementById("loginCard");
+const backBtn=document.getElementById("backBtn");
+
+const SAVED_KEY_FLAG="ovr_saved_key";
+const DEVICE_ID_FLAG="ovr_device_id";
+const LAST_SEEN_FLAG="ovr_last_seen_ms";
+const CLOCK_TOLERANCE_MS=5*60*1000;
+
+function getDeviceId(){
+  let id=localStorage.getItem(DEVICE_ID_FLAG);
+  if(!id){
+    id="dev-"+crypto.randomUUID();
+    localStorage.setItem(DEVICE_ID_FLAG,id);
+  }
+  return id;
+}
+function isClockRolledBack(){
+  const now=Date.now();
+  const lastSeen=parseInt(localStorage.getItem(LAST_SEEN_FLAG)||"0",10);
+  if(now<lastSeen-CLOCK_TOLERANCE_MS)return true;
+  if(now>lastSeen)localStorage.setItem(LAST_SEEN_FLAG,String(now));
+  return false;
+}
+function setMsg(text,type=""){
+  keyMsg.textContent=text;
+  keyMsg.className="msg "+type;
+}
+async function validateAndLogin(inputKey,silent=false){
+  if(isClockRolledBack())return {ok:false,message:"Jam perangkat terdeteksi diubah mundur. Sambungkan internet dan coba lagi."};
+  try{
+    const r=await fetch("/api/login",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      credentials:"same-origin",
+      cache:"no-store",
+      body:JSON.stringify({key:inputKey,deviceId:getDeviceId()})
+    });
+    const data=await r.json().catch(()=>({}));
+    if(!r.ok||!data.ok){
+      return {ok:false,message:data.message||"Key tidak valid."};
+    }
+    localStorage.setItem(SAVED_KEY_FLAG,inputKey);
+    return data;
+  }catch(e){
+    if(!silent)console.error(e);
+    return {ok:false,message:"Gagal memeriksa key. Cek koneksi internet / server."};
+  }
+}
+
+/* Cek session server terlebih dahulu.
+   Kalau cookie session masih valid, user langsung masuk tanpa mengetik key lagi.
+   Kalau cookie hilang/expired, key yang tersimpan di perangkat dicoba ulang
+   secara otomatis. Firestore tetap memverifikasi deviceId. */
+async function restoreAccess(){
+  setMsg("");
+
+  try{
+    const r=await fetch("/api/session",{
+      method:"GET",
+      credentials:"same-origin",
+      cache:"no-store"
+    });
+    const data=await r.json().catch(()=>({}));
+
+    if(r.ok&&data.ok){
+      location.replace("/app");
+      return;
+    }
+  }catch(e){
+    /* Tetap tampilkan UI default. */
+  }
+
+  const savedKey=localStorage.getItem(SAVED_KEY_FLAG);
+  if(!savedKey){
+    keyBtn.disabled=false;
+    keyInput.value="";
+    setMsg("");
+    return;
+  }
+
+  /* Pulihkan key secara diam-diam tanpa menampilkan error sementara. */
+  const result=await validateAndLogin(savedKey,true);
+
+  if(result.ok){
+    location.replace("/app");
+    return;
+  }
+
+  const invalidKey=
+    result.message.includes("tidak ditemukan") ||
+    result.message.includes("salah") ||
+    result.message.includes("dinonaktifkan") ||
+    result.message.includes("kedaluwarsa") ||
+    result.message.includes("perangkat lain");
+
+  if(invalidKey){
+    localStorage.removeItem(SAVED_KEY_FLAG);
+  }
+
+  keyBtn.disabled=false;
+  keyInput.value="";
+  setMsg("");
+}
+
+async function checkKey(){
+  const inputKey=keyInput.value.trim();
+  if(!inputKey){
+    setMsg("Key tidak boleh kosong.","error");
+    return;
+  }
+
+  keyBtn.disabled=true;
+  setMsg("Memeriksa key...");
+
+  const result=await validateAndLogin(inputKey);
+
+  if(!result.ok){
+    setMsg(result.message,"error");
+    keyBtn.disabled=false;
+    keyInput.focus();
+    keyInput.select();
+    return;
+  }
+
+  setMsg("Key valid! Membuka aplikasi...","success");
+  setTimeout(()=>location.replace("/app"),180);
+}
+
+keyBtn.addEventListener("click",checkKey);
+keyInput.addEventListener("keydown",e=>{if(e.key==="Enter")checkKey()});
+
+backBtn.addEventListener("click",()=>{
+  loginCard.classList.add("leaving");
+  setTimeout(()=>{ window.location.href="index.html"; },200);
+});
+
+// =====================================================
+// LINK PEMBELIAN KEY
+// GANTI URL DI BAWAH INI SAJA
+// =====================================================
+
+buyKeyBtn.addEventListener("click",()=>{
+  // Halaman pembayaran berada satu folder dengan index.html
+  window.location.href="assets/pembayaran.html";
+});
+closeModal.addEventListener("click",()=>{
+  buyModal.classList.remove("show");
+  buyModal.setAttribute("aria-hidden","true");
+});
+buyModal.addEventListener("click",e=>{
+  if(e.target===buyModal){
+    buyModal.classList.remove("show");
+    buyModal.setAttribute("aria-hidden","true");
+  }
+});
+
+(async()=>{
+  await restoreAccess();
+  keyInput.focus();
+})();
+</script>
+</body>
+</html>
