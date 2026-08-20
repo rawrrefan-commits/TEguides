@@ -318,7 +318,7 @@ async function restoreAccess(){
     const data=await r.json().catch(()=>({}));
 
     if(r.ok&&data.ok){
-      location.replace("/app");
+      location.replace("/calculator");
       return;
     }
   }catch(e){
@@ -378,7 +378,7 @@ async function checkKey(){
   }
 
   setMsg("Key valid! Membuka aplikasi...","success");
-  setTimeout(()=>location.replace("/app"),180);
+  setTimeout(()=>location.replace("/calculator"),180);
 }
 
 keyBtn.addEventListener("click",checkKey);
