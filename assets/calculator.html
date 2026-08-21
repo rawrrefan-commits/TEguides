@@ -298,8 +298,19 @@
         left: 0;
         right: 0;
         z-index: 30;
-        max-height: 300px;
+
+        /* Ruang scroll lebih besar di HP agar OVR 180 + bintang ke-10
+           benar-benar bisa dibawa ke area yang terlihat. */
+        max-height: min(55vh, 420px);
+        min-height: 0;
         overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        scroll-padding-bottom: 24px;
+        padding-bottom: 18px;
+        box-sizing: border-box;
+
         background: #fff;
         border: 1px solid #d5e4f2;
         border-radius: 10px;
@@ -326,6 +337,7 @@
 
     .formula-option:last-child {
         border-bottom: none;
+        margin-bottom: 2px;
     }
 
     .formula-option:hover,
@@ -1461,7 +1473,11 @@ body::after{
     background:rgba(255,255,255,.96);
     box-shadow:0 25px 50px rgba(29,62,100,.17);
     backdrop-filter:blur(18px);
-    overflow:hidden;
+    overflow-x:hidden;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;
+    touch-action:pan-y;
     animation:panelIn .24s ease both;
 }
 
@@ -1993,13 +2009,36 @@ body::after,
     touch-action:none;
 }
 
+
+
+/* ===== PATCH: MAX TARGET OVR DROPDOWN SCROLL ===== */
+.formula-panel{
+    max-height:360px !important;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;
+    touch-action:pan-y;
+    scrollbar-width:thin;
+}
+@media (max-width:420px){
+    .formula-panel{
+        max-height:min(360px, 52vh) !important;
+    }
+}
 </style>
 
+<style id="ocr-accuracy-final-patch">
+/* Final OCR accuracy patch: dedicated numeric ROI + safe mobile dropdown. */
+.formula-panel{max-height:min(68vh,520px)!important;padding-bottom:18px!important;overscroll-behavior:contain!important;touch-action:pan-y!important;}
+.formula-option{min-height:48px;padding:12px 14px!important;}
+.ocr-accuracy-warning{margin-top:8px;padding:8px 10px;border-radius:12px;background:#fff8e8;border:1px solid #f0d89a;color:#795b19;font-size:11px;line-height:1.4;}
+</style>
 <style id="performance-only-fix">
 /* PERFORMANCE PATCH: visual/CSS only; original HTML + JS/calculation/session remain untouched. */
 html{scroll-behavior:auto!important;}
 body{background:#f8fbff!important;}
-.drill-panel,.formula-panel{z-index:99999!important;max-height:52vh!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior:contain!important;touch-action:pan-y!important;}
+.drill-panel,.formula-panel{z-index:99999!important;max-height:min(68vh,520px)!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior:contain!important;touch-action:pan-y!important;}
 .drill-item,.formula-item{min-height:46px!important;padding:12px 14px!important;}
 .drill-category{position:sticky!important;z-index:2!important;}
 /* Avoid expensive compositor effects during pinch-zoom / scrolling. */
@@ -2054,6 +2093,9 @@ body{background:#f8fbff!important;}
             <strong>📌 Agar OCR lebih akurat:</strong> gunakan screenshot profil yang <b>clean</b>, tanpa notch/status bar HP jika memungkinkan.
             Pastikan gambar tidak blur, tidak terlalu kecil, tidak terpotong, tidak miring, dan seluruh tabel statistik terlihat jelas.
             Hindari screenshot yang sudah dikompres atau diberi filter. Semakin tajam angka OVR dan angka statistik, semakin akurat hasilnya.
+            <div style="margin-top:8px;font-size:11px;line-height:1.55;opacity:.82;">
+                ⚠️ <b>Catatan:</b> hasil deteksi gambar bisa saja tidak 100% akurat. Sebelum menghitung OVR, cek kembali angka yang terdeteksi dan <b>koreksi manual terlebih dahulu</b> jika ada statistik yang salah atau kurang terbaca.
+            </div>
         </div>
 
         <div class="ocr-progress" id="ocrProgress">
@@ -2065,15 +2107,15 @@ body{background:#f8fbff!important;}
             <div class="ocr-loading-spinner"></div>
             <div class="ocr-loading-text">
                 <strong>Menganalisis screenshot...</strong>
-                <span>OVR &amp; statistik sedang dibaca dengan OCR presisi</span>
+                <span>OVR &amp; statistik sedang dibaca dengan OCR adaptif</span>
             </div>
         </div>
 
         <div class="player-result" id="playerResult">
             <div class="player-result-top">
                 <div class="detected-meta">
-                    <span class="detected-chip">OVR &amp; 15 STATISTIK</span>
-                    <span class="detected-chip">OCR PRESISI</span>
+                    <span class="detected-chip" id="detectedTypeChip">OVR &amp; 15 STATISTIK</span>
+                    <span class="detected-chip">OCR ADAPTIF</span>
                 </div>
                 <div class="detected-ovr">
                     <small>OVR</small>
@@ -2091,7 +2133,6 @@ body{background:#f8fbff!important;}
                 Setelah OCR selesai, pilih <b>Drill apa pun</b>. Statistik dari foto akan otomatis masuk sesuai atribut drill tersebut.
                 Tidak perlu mengisi satu per satu.
             </div>
-            <div class="ocr-scope-note">Hijau = atribut terang • Merah = atribut gelap • Abu/biru = atribut normal/tidak disorot.</div>
         </div>
     </section>
 
@@ -2557,6 +2598,17 @@ body{background:#f8fbff!important;}
         ];
         const STAT_ORDER = STAT_GRID.flat();
 
+        // Top Eleven GK memiliki 15 label statistik yang berbeda dari pemain biasa.
+        // Urutan mengikuti tabel GK pada screenshot: Penjagaan Gawang | Fisik.
+        const GK_STAT_GRID = [
+            ["Refleks", "Lemparan", "Kebugaran"],
+            ["Kelincahan", "Sepakan", "Kekuatan"],
+            ["Antisipasi", "Tinjuan", "Agresivitas"],
+            ["Keluar Sarang", "Jangkauan Udara", "Kecepatan"],
+            ["Komunikasi", "Konsentrasi", "Kreativitas"]
+        ];
+        const GK_STAT_ORDER = GK_STAT_GRID.flat();
+
         const statAliases = {
             "refleks":"Refleks", "kelincahan":"Kelincahan", "antisipasi":"Antisipasi",
             "keluar sarang":"Keluar Sarang", "komunikasi":"Komunikasi", "lemparan":"Lemparan",
@@ -2647,6 +2699,51 @@ body{background:#f8fbff!important;}
             return result?.data || {text:"",confidence:0};
         }
 
+        async function recognizeLabelText(canvas, psm="6") {
+            const worker=await getWorker();
+            // Satu pass teks ringan hanya untuk mengenali label kategori statistik.
+            // recognizeDigits() akan mengatur whitelist angka lagi pada pass berikutnya.
+            await worker.setParameters({
+                tessedit_char_whitelist:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz ",
+                tessedit_pageseg_mode:psm,
+                preserve_interword_spaces:"1"
+            });
+            const result=await worker.recognize(canvas);
+            return result?.data || {text:"",confidence:0};
+        }
+
+        function makeStatHeaderCanvas(img) {
+            // ROI mengambil label kategori statistik di atas tabel.
+            // GK dikenali dari label "PENJAGAAN GAWANG", bukan dari tebakan angka.
+            const canvas=cropRelative(img,0.302,0.392,0.715,0.475,4);
+            prepareGray(canvas,1.18);
+            normalizeCanvas(canvas);
+            return canvas;
+        }
+
+        async function detectStatMode(img) {
+            const canvas=makeStatHeaderCanvas(img);
+            const result=await recognizeLabelText(canvas,"6");
+            const text=normalize(result?.text||"");
+
+            // Header "PENJAGAAN GAWANG" adalah sinyal terkuat.
+            // Kata statistik GK lain menjadi fallback jika header sedikit terpotong.
+            const gkTokens=[
+                "penjagaan gawang","gawang","refleks","tinjuan",
+                "lemparan","jangkauan udara","keluar sarang","konsentrasi"
+            ];
+            const gkHits=gkTokens.filter(token=>text.includes(normalize(token)));
+            const isGK=gkHits.length>=1;
+
+            return {
+                type:isGK ? "GK" : "PLAYER",
+                statGrid:isGK ? GK_STAT_GRID : STAT_GRID,
+                statOrder:isGK ? GK_STAT_ORDER : STAT_ORDER,
+                labelText:text,
+                gkHits
+            };
+        }
+
         function numbersFromText(text) {
             return String(text||"")
                 .replace(/[Oo]/g,"0")
@@ -2657,36 +2754,123 @@ body{background:#f8fbff!important;}
         }
 
         function bestNumber(results, min=1, max=250) {
+            /*
+             * Pemilihan angka dibuat berbasis kandidat + confidence, bukan
+             * sekadar jumlah kemunculan. Ini penting untuk kasus nyata seperti
+             * 71 -> 7, 108 -> 10, atau 130 -> 13.
+             */
             const candidates=[];
-            for(const r of results){
-                const nums=numbersFromText(r?.text);
-                const conf=Number(r?.confidence||0);
+            for(let i=0;i<results.length;i++){
+                const r=results[i]||{};
+                const nums=numbersFromText(r.text);
+                const conf=Math.max(0,Number(r.confidence||0));
+                const raw=String(r.text||"").trim();
                 for(const n of nums){
-                    if(n>=min && n<=max) candidates.push({n,conf});
+                    if(n>=min && n<=max){
+                        candidates.push({n,conf,pass:i,raw});
+                    }
                 }
             }
             if(!candidates.length) return null;
 
-            // Utamakan hasil 2-3 digit. Ini mencegah 111 menjadi 1 ketika
-            // salah satu pass OCR hanya menangkap digit pertama.
-            candidates.sort((a,b)=>{
-                const da=String(a.n).length, db=String(b.n).length;
-                if(db!==da) return db-da;
-                return b.conf-a.conf;
-            });
+            const groups=new Map();
+            for(const c of candidates){
+                if(!groups.has(c.n)) groups.set(c.n,[]);
+                groups.get(c.n).push(c);
+            }
 
-            // Konsensus sederhana: jika angka yang sama muncul beberapa kali,
-            // pilih angka tersebut walau confidence salah satu pass lebih rendah.
-            const counts=new Map();
-            for(const c of candidates) counts.set(c.n,(counts.get(c.n)||0)+1);
-            candidates.sort((a,b)=>{
-                const ca=counts.get(a.n)||0, cb=counts.get(b.n)||0;
-                if(cb!==ca) return cb-ca;
-                const da=String(a.n).length, db=String(b.n).length;
-                if(db!==da) return db-da;
-                return b.conf-a.conf;
+            const scored=[];
+            for(const [n,list] of groups){
+                const digits=String(n).length;
+                const support=list.length;
+                const maxConf=Math.max(...list.map(x=>x.conf));
+                const avgConf=list.reduce((sum,x)=>sum+x.conf,0)/list.length;
+
+                // Confidence tetap menjadi faktor utama. Panjang angka hanya
+                // menjadi prioritas tambahan agar digit belakang tidak hilang.
+                let score=maxConf*0.72 + avgConf*0.18 + Math.min(support,4)*3;
+                if(digits===3) score+=17;
+                else if(digits===2) score+=11;
+
+                // Kandidat 1 digit yang merupakan prefix angka 2/3 digit
+                // diberi penalti tambahan jika angka yang lebih panjang punya
+                // confidence yang masih layak. Contoh: 7 vs 71.
+                const longer=Array.from(groups.keys()).filter(other=>{
+                    const a=String(other), b=String(n);
+                    return a.length>b.length && a.startsWith(b);
+                });
+                if(digits===1 && longer.some(other=>{
+                    const ls=groups.get(other)||[];
+                    return Math.max(...ls.map(x=>x.conf))>=45;
+                })) score-=18;
+
+                if(digits>=2 && support>=2) score+=8;
+                scored.push({n,score,digits,support,maxConf,avgConf});
+            }
+
+            scored.sort((a,b)=>{
+                if(Math.abs(b.score-a.score)>0.001) return b.score-a.score;
+                if(b.digits!==a.digits) return b.digits-a.digits;
+                if(b.maxConf!==a.maxConf) return b.maxConf-a.maxConf;
+                return b.support-a.support;
             });
-            return candidates[0].n;
+            return scored[0].n;
+        }
+
+        // Crop khusus angka: jauh lebih sempit daripada cell penuh sehingga
+        // label statistik tidak ikut mengganggu pembacaan digit.
+        function makeNumberCanvas(img,row,col) {
+            const panel=cropRelative(img,0.302,0.495,0.839,0.803,1);
+            const w=panel.width,h=panel.height,colW=w/3,rowH=h/5;
+            const x=Math.round(col*colW+colW*0.68);
+            const y=Math.round(row*rowH+rowH*0.08);
+            const cw=Math.round(colW*0.30), ch=Math.round(rowH*0.84);
+            const out=document.createElement("canvas");
+            out.width=420; out.height=110;
+            const ctx=out.getContext("2d",{willReadFrequently:true});
+            ctx.fillStyle="#fff"; ctx.fillRect(0,0,out.width,out.height);
+            ctx.imageSmoothingEnabled=true;
+            ctx.drawImage(panel,x,y,cw,ch,0,0,out.width,out.height);
+            return out;
+        }
+
+        function sharpenCanvas(canvas) {
+            const ctx=canvas.getContext("2d",{willReadFrequently:true});
+            const w=canvas.width,h=canvas.height;
+            const src=ctx.getImageData(0,0,w,h), dst=ctx.createImageData(w,h);
+            const s=src.data,d=dst.data;
+            for(let y=1;y<h-1;y++){
+                for(let x=1;x<w-1;x++){
+                    const i=(y*w+x)*4;
+                    const v=5*s[i]-s[i-4]-s[i+4]-s[i-w*4]-s[i+w*4];
+                    const q=clamp(v,0,255);
+                    d[i]=d[i+1]=d[i+2]=q; d[i+3]=255;
+                }
+            }
+            ctx.putImageData(dst,0,0);
+            return canvas;
+        }
+
+        async function recoverSingleDigitTruncation(img,row,col,initialValue) {
+            // Hanya dijalankan bila hasil awal 1 digit. Jadi OCR tetap ringan
+            // untuk angka yang sudah terbaca 2/3 digit dengan benar.
+            if(initialValue===null || String(initialValue).length!==1) return initialValue;
+
+            const base=makeNumberCanvas(img,row,col);
+            const variants=[
+                normalizeCanvas(prepareGray(makeNumberCanvas(img,row,col),1.12)),
+                thresholdCanvas(prepareGray(makeNumberCanvas(img,row,col),1.05),150),
+                thresholdCanvas(sharpenCanvas(prepareGray(base,1.0)),170)
+            ];
+            const extra=[];
+            for(const canvas of variants){
+                extra.push(await recognizeDigits(canvas,"7"));
+                extra.push(await recognizeDigits(canvas,"10"));
+            }
+
+            const recovered=bestNumber(extra,1,250);
+            if(recovered!==null && String(recovered).length>=2) return recovered;
+            return initialValue;
         }
 
         async function ocrOVR(img) {
@@ -2732,8 +2916,11 @@ body{background:#f8fbff!important;}
         function makeCellCanvas(img,row,col) {
             const panel=cropRelative(img,0.302,0.495,0.839,0.803,1);
             const w=panel.width,h=panel.height,colW=w/3,rowH=h/5;
-            const x=Math.round(col*colW+colW*0.55), y=Math.round(row*rowH+rowH*0.01);
-            const cw=Math.round(colW*0.42), ch=Math.round(rowH*0.98);
+            // Angka berada di sisi kanan tiap cell. Crop dibuat sedikit
+            // lebih fokus ke area angka agar digit kedua (mis. 71) tidak
+            // hilang akibat teks label/background.
+            const x=Math.round(col*colW+colW*0.52), y=Math.round(row*rowH+rowH*0.01);
+            const cw=Math.round(colW*0.46), ch=Math.round(rowH*0.98);
             const out=document.createElement("canvas"); out.width=300; out.height=90;
             const o=out.getContext("2d",{willReadFrequently:true}); o.fillStyle="#fff"; o.fillRect(0,0,300,90);
             o.imageSmoothingEnabled=true; o.drawImage(panel,x,y,cw,ch,0,0,300,90);
@@ -2755,14 +2942,14 @@ body{background:#f8fbff!important;}
         }
 
         async function ocrStats(img) {
+            const mode=await detectStatMode(img);
             const stats={}, tones=buildToneGrid(img);
 
-            // Akurasi diprioritaskan daripada kecepatan: setiap CELL angka
-            // dibaca beberapa kali dengan preprocessing berbeda. Header
-            // BERTAHAN/MENYERANG/FISIK tetap berada di luar ROI.
+            // Akurasi tetap memakai 4 preprocessing per CELL seperti versi sebelumnya.
+            // Hanya nama/urutan statistik yang berubah otomatis untuk GK.
             for(let row=0;row<5;row++){
                 for(let col=0;col<3;col++){
-                    const name=STAT_GRID[row][col];
+                    const name=mode.statGrid[row][col];
                     const canvases=[
                         makeCellCanvas(img,row,col),
                         thresholdCanvas(makeCellCanvas(img,row,col),145),
@@ -2774,7 +2961,15 @@ body{background:#f8fbff!important;}
                         results.push(await recognizeDigits(canvas,"7"));
                     }
 
-                    const value=bestNumber(results,1,250);
+                    // Pass tambahan khusus satu kata/angka. PSM 8 sering
+                    // mempertahankan digit kedua yang kadang hilang pada PSM 7.
+                    const digitCanvas=makeCellCanvas(img,row,col);
+                    results.push(await recognizeDigits(digitCanvas,"8"));
+
+                    let value=bestNumber(results,1,250);
+                    // Jika hasil awal hanya satu digit, lakukan recovery khusus
+                    // untuk memastikan digit kedua (71/82/98 dst.) tidak hilang.
+                    value=await recoverSingleDigitTruncation(img,row,col,value);
                     if(value!==null) stats[name]=value;
 
                     const done=(row*3+col+1);
@@ -2782,7 +2977,13 @@ body{background:#f8fbff!important;}
                 }
             }
 
-            return {stats,tones};
+            return {
+                stats,
+                tones,
+                playerType:mode.type,
+                statOrder:mode.statOrder,
+                labelText:mode.labelText
+            };
         }
 
         function classifyPixel(r,g,b){
@@ -2817,8 +3018,13 @@ body{background:#f8fbff!important;}
             ]);
             detectedOVR.textContent=player.ovr??"-";
             if(player.ovr!==null){ovrInput.value=player.ovr;ovrInput.dispatchEvent(new Event("input",{bubbles:true}));}
+            const detectedTypeChip=document.getElementById("detectedTypeChip");
+            if(detectedTypeChip){
+                detectedTypeChip.textContent=player.playerType==="GK" ? "GK • 15 STATISTIK" : "PEMAIN • 15 STATISTIK";
+            }
             detectedStats.innerHTML="";
-            STAT_ORDER.forEach((name,index)=>{
+            const renderOrder=player.statOrder || STAT_ORDER;
+            renderOrder.forEach((name,index)=>{
                 const value=player.stats[name],tone=player.tones?.[name]||"neutral",item=document.createElement("div");
                 item.className="detected-stat"+(tone==="bright"?" tone-bright":"")+(tone==="dark"?" tone-dark":"");
                 item.innerHTML="<span>"+name+"</span><strong>"+(value??"-")+"</strong>"; detectedStats.appendChild(item);
@@ -2904,13 +3110,22 @@ body{background:#f8fbff!important;}
             ocrLoading.classList.add("show");
             ocrLoading.setAttribute("aria-hidden","false");
             ocrProgressBar.style.width="3%";
-            setStatus("OCR presisi: membaca OVR dan 15 angka statistik...");
+            setStatus("OCR adaptif: membaca OVR dan 15 angka statistik...");
             try{
                 const img=await loadImage(selectedFile),ovr=await ocrOVR(img); ocrProgressBar.style.width="28%";
-                const statsResult=await ocrStats(img); detectedPlayer={ovr,stats:statsResult.stats,tones:statsResult.tones}; renderPlayer(detectedPlayer);
+                const statsResult=await ocrStats(img);
+                detectedPlayer={
+                    ovr,
+                    stats:statsResult.stats,
+                    tones:statsResult.tones,
+                    playerType:statsResult.playerType,
+                    statOrder:statsResult.statOrder
+                };
+                renderPlayer(detectedPlayer);
                 const count=Object.keys(detectedPlayer.stats).length;
-                if(ovr!==null&&count===15)setStatus("Selesai. OVR "+ovr+" • 15 statistik terbaca dengan OCR presisi.","success");
-                else if(ovr!==null||count)setStatus("Sebagian data terbaca: OVR "+(ovr??"-")+" • "+count+"/15 statistik.","success");
+                const modeLabel=detectedPlayer.playerType==="GK" ? "GK" : "pemain";
+                if(ovr!==null&&count===15)setStatus("Selesai. "+modeLabel+" • OVR "+ovr+" • 15 statistik terbaca dengan OCR adaptif.","success");
+                else if(ovr!==null||count)setStatus("Sebagian data terbaca: "+modeLabel+" • OVR "+(ovr??"-")+" • "+count+"/15 statistik.","success");
                 else setStatus("Angka belum terbaca. Coba gambar yang lebih tajam.","error");
                 ocrProgressBar.style.width="100%";
             }catch(error){console.error(error);setStatus("OCR gagal. Coba lagi dengan screenshot profil Top Eleven.","error");}
@@ -3003,5 +3218,220 @@ body{background:#f8fbff!important;}
 })();
 </script>
 
+
+<style id="formula-scroll-final-fix">
+/* FINAL: Max Target OVR dropdown — reliable touch scrolling to OVR 180 */
+.formula-wrap{
+    position:relative!important;
+    overflow:visible!important;
+}
+.formula-panel{
+    max-height:min(48vh,360px)!important;
+    height:auto!important;
+    overflow-y:scroll!important;
+    overflow-x:hidden!important;
+    -webkit-overflow-scrolling:touch!important;
+    overscroll-behavior:contain!important;
+    touch-action:pan-y!important;
+    scroll-behavior:auto!important;
+    scrollbar-width:auto!important;
+    box-sizing:border-box!important;
+    padding-bottom:64px!important;
+}
+.formula-panel::after{
+    content:"";
+    display:block;
+    width:100%;
+    height:56px;
+    flex:none;
+}
+.formula-option{
+    min-height:48px!important;
+    box-sizing:border-box!important;
+}
+@media (max-width:420px){
+    .formula-panel{
+        max-height:min(48vh,340px)!important;
+        padding-bottom:64px!important;
+    }
+}
+</style>
+
+
+<style id="smooth-motion-pack">
+/* ===== Smooth Motion Pack: lightweight, transform/opacity based ===== */
+html{scroll-behavior:smooth;-webkit-tap-highlight-color:transparent}
+body{scroll-behavior:smooth}
+button,a,.drill-box,.formula-box,.formula-option,.ocr-btn,.key-gate-btn,.attribute-input,.ovr-input,.player-import,.player-result,.result,.formula-panel,.drill-panel,.image-pick-label,.preview-remove{will-change:auto}
+
+/* Soft touch feedback — no heavy shadows/filters */
+button,.ocr-btn,.key-gate-btn,.drill-box,.formula-box,.formula-option,.image-pick-label,.preview-remove{transition:transform .18s cubic-bezier(.22,1,.36,1),opacity .18s ease,background-color .18s ease,border-color .18s ease}
+button:active,.ocr-btn:active,.key-gate-btn:active,.drill-box:active,.formula-box:active,.formula-option:active,.image-pick-label:active,.preview-remove:active{transform:translateY(1px) scale(.985)}
+button:focus-visible,.ocr-btn:focus-visible,.key-gate-btn:focus-visible,.formula-box:focus-visible,.drill-box:focus-visible{outline:2px solid rgba(39,118,216,.35);outline-offset:3px}
+
+/* Ripple only on direct touch/click targets */
+.smooth-ripple{position:relative;overflow:hidden;isolation:isolate}
+.smooth-ripple .motion-ripple{position:absolute;width:18px;height:18px;border-radius:50%;pointer-events:none;background:rgba(255,255,255,.34);transform:translate(-50%,-50%) scale(0);opacity:.75;animation:motionRipple .48s cubic-bezier(.2,.7,.2,1) forwards;z-index:20}
+@keyframes motionRipple{0%{transform:translate(-50%,-50%) scale(0);opacity:.65}100%{transform:translate(-50%,-50%) scale(10);opacity:0}}
+
+/* Panels open smoothly */
+.formula-panel.open,.drill-panel.open{animation:panelIn .22s cubic-bezier(.22,1,.36,1) both;transform-origin:top center}
+@keyframes panelIn{0%{opacity:0;transform:translateY(-6px) scaleY(.985)}100%{opacity:1;transform:translateY(0) scaleY(1)}}
+
+/* Lightweight entrance motion */
+.motion-reveal{opacity:0;transform:translateY(10px);transition:opacity .45s ease,transform .45s cubic-bezier(.22,1,.36,1)}
+.motion-reveal.motion-visible{opacity:1;transform:none}
+
+/* Smooth scrolling inside long menus */
+.formula-panel,.drill-panel{scroll-behavior:smooth;scrollbar-gutter:stable}
+.formula-panel::-webkit-scrollbar,.drill-panel::-webkit-scrollbar{width:6px}
+.formula-panel::-webkit-scrollbar-thumb,.drill-panel::-webkit-scrollbar-thumb{border-radius:99px;background:rgba(39,118,216,.22)}
+
+/* Small lift when hovering on devices that support hover */
+@media (hover:hover){
+  button:hover,.ocr-btn:hover,.key-gate-btn:hover,.drill-box:hover,.formula-box:hover,.formula-option:hover,.image-pick-label:hover{transform:translateY(-1px)}
+  .formula-option:hover{background-color:rgba(39,118,216,.035)}
+}
+
+/* Respect Android/desktop accessibility setting */
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+  .motion-reveal{opacity:1!important;transform:none!important}
+}
+</style>
+
+<script id="smooth-motion-pack-js">
+(function(){
+  const reduce=window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce) return;
+
+  /* Add ripple feedback without changing existing button logic. */
+  const selector='button,.ocr-btn,.key-gate-btn,.formula-option,.image-pick-label';
+  document.addEventListener('pointerdown',function(e){
+    const target=e.target.closest(selector);
+    if(!target || target.disabled) return;
+    target.classList.add('smooth-ripple');
+    const rect=target.getBoundingClientRect();
+    const ripple=document.createElement('span');
+    ripple.className='motion-ripple';
+    ripple.style.left=(e.clientX-rect.left)+'px';
+    ripple.style.top=(e.clientY-rect.top)+'px';
+    target.appendChild(ripple);
+    ripple.addEventListener('animationend',()=>ripple.remove(),{once:true});
+  },{passive:true});
+
+  /* Reveal only meaningful blocks as they enter the viewport. */
+  const revealSelector='.player-import,.player-result,.result,.summary,.formula-wrap,.drill-wrap,.ocr-actions,.ocr-status,.ocr-clean-note';
+  const items=document.querySelectorAll(revealSelector);
+  items.forEach((el,i)=>{el.classList.add('motion-reveal');el.style.transitionDelay=Math.min(i*18,180)+'ms'});
+  if('IntersectionObserver' in window){
+    const io=new IntersectionObserver(entries=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){entry.target.classList.add('motion-visible');io.unobserve(entry.target)}
+      });
+    },{threshold:.08,rootMargin:'0px 0px -24px 0px'});
+    items.forEach(el=>io.observe(el));
+  }else items.forEach(el=>el.classList.add('motion-visible'));
+
+  /* Make touch scrolling feel natural while keeping the page from jumping. */
+  document.querySelectorAll('.formula-panel,.drill-panel').forEach(panel=>{
+    panel.addEventListener('touchstart',()=>{panel.style.scrollBehavior='auto'},{passive:true});
+    panel.addEventListener('touchend',()=>{panel.style.scrollBehavior='smooth'},{passive:true});
+  });
+})();
+</script>
+
 </body>
 </html>
+
+<style id="final-ui-adjustments">
+/* ===== Final UI adjustments ===== */
+/* Drill dropdown: a little taller so the lower drills are easier to reach on phones. */
+.drill-panel{
+    max-height:min(58vh,440px)!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    -webkit-overflow-scrolling:touch!important;
+    overscroll-behavior:contain!important;
+    touch-action:pan-y!important;
+    scroll-behavior:auto!important;
+    padding-bottom:58px!important;
+}
+@media (max-width:420px){
+    .drill-panel{max-height:min(58vh,400px)!important;padding-bottom:62px!important;}
+}
+
+/* No opening/press animation on the two main dropdown buttons. */
+.drill-box,.formula-box{
+    transition:none!important;
+}
+.drill-box:active,.formula-box:active,
+.drill-box:hover,.formula-box:hover{
+    transform:none!important;
+}
+.drill-panel.open,.formula-panel.open{
+    animation:none!important;
+    transform:none!important;
+}
+
+/* More modern star treatment while keeping the existing yellow/orange/red/pink palette. */
+.star-row{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:2px;
+    perspective:420px;
+}
+.star-row svg{
+    width:29px!important;
+    height:29px!important;
+    overflow:visible;
+    transform-origin:center;
+    filter:drop-shadow(0 3px 3px rgba(32,58,91,.20));
+    animation:starModernIn .48s cubic-bezier(.2,.8,.2,1) both;
+}
+.star-row svg:nth-child(2n){animation-delay:.035s}
+.star-row svg:nth-child(3n){animation-delay:.07s}
+.star-row svg:nth-child(4n){animation-delay:.105s}
+
+/* Red stars (8-9) get a subtle glow/pulse. */
+.star-row svg:nth-child(8),
+.star-row svg:nth-child(9){
+    animation:starRedPulse 1.9s ease-in-out infinite, starModernIn .48s cubic-bezier(.2,.8,.2,1) both;
+}
+/* Pink 10th star gets the strongest but still lightweight accent. */
+.star-row svg:nth-child(10){
+    animation:starPinkPulse 1.65s ease-in-out infinite, starModernIn .52s cubic-bezier(.2,.8,.2,1) both;
+}
+
+@keyframes starModernIn{
+    0%{opacity:0;transform:translateY(5px) scale(.68) rotate(-8deg)}
+    65%{opacity:1;transform:translateY(-1px) scale(1.06) rotate(2deg)}
+    100%{opacity:1;transform:translateY(0) scale(1) rotate(0)}
+}
+@keyframes starRedPulse{
+    0%,100%{transform:scale(1);filter:drop-shadow(0 3px 3px rgba(32,58,91,.20)) drop-shadow(0 0 0 rgba(239,49,61,0))}
+    50%{transform:scale(1.055);filter:drop-shadow(0 4px 4px rgba(32,58,91,.20)) drop-shadow(0 0 7px rgba(239,49,61,.28))}
+}
+@keyframes starPinkPulse{
+    0%,100%{transform:scale(1) rotate(0deg);filter:drop-shadow(0 3px 3px rgba(32,58,91,.20)) drop-shadow(0 0 0 rgba(255,74,176,0))}
+    50%{transform:scale(1.09) rotate(2deg);filter:drop-shadow(0 4px 4px rgba(32,58,91,.20)) drop-shadow(0 0 9px rgba(255,74,176,.34))}
+}
+
+@media (prefers-reduced-motion:reduce){
+    .star-row svg:nth-child(8),.star-row svg:nth-child(9),.star-row svg:nth-child(10){animation:none!important}
+}
+
+/* Close-image button: keep it pinned to the preview and make the tap one-shot. */
+.player-preview{position:relative!important;}
+.preview-remove{
+    position:absolute!important;
+    top:9px!important;
+    right:9px!important;
+    z-index:50!important;
+    transform:none!important;
+    transition:background .18s ease,opacity .18s ease!important;
+}
+.preview-remove:active,.preview-remove:hover{transform:none!important;}
+</style>
